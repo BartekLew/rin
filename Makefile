@@ -17,10 +17,10 @@ head:
 	@mkdir -p bin/
 	@mkdir -p o/
 
-	@echo TYPE	= ${TYPE}
-	@echo CC	= ${CC}
-	@echo CFLAGS	= ${CFLAGS}
-	@echo LIBS	= ${LIBS}
+	@echo "TYPE	= ${TYPE}"
+	@echo "CC	= ${CC}"
+	@echo "CFLAGS	= ${CFLAGS}"
+	@echo "LIBS	= ${LIBS}"
 	@echo
 
 bin/rin: src/rin.c o/events.o 
