@@ -2,7 +2,7 @@
 #include "common.h"
 
 
-void sync (Event *in, Context *ctx) {
+void sync_action (Event *in, Context *ctx) {
 
 	#ifndef TESTIFY
 
@@ -12,7 +12,7 @@ void sync (Event *in, Context *ctx) {
 			assume value didn't change.
 		*/
 
-		printf( "cur @ %6lu,%6lu %6lu %6lu\n",
+		printf( "cur @ %6u,%6u %6u %6u\r",
 			ctx->x, ctx->y, ctx->pressure, ctx->id
 		);
 	}
@@ -23,6 +23,7 @@ void sync (Event *in, Context *ctx) {
 
 	#endif
 
+	fflush(stdout);
 	ctx->completeness = 0;
 
 }

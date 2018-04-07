@@ -7,7 +7,7 @@
 #include <fcntl.h>
 
 Handler handlers[] = {
-	[EV_SYN] = sync,
+	[EV_SYN] = sync_action,
 	[EV_ABS] = set_point,
 	[EV_KEY] = ignore
 };

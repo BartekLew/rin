@@ -27,14 +27,14 @@
 #ifdef DEBUG
 
 	#define Unsupported(ev) \
-		fprintf( stderr, "\nt=%lu.%06lu %x/%x UNSUPPORTED @ %s:%u\n", \
+		fprintf( stderr, "t=%u.%06u %x/%x UNSUPPORTED @ %s:%u\n", \
 			(uint) (ev)->time.tv_sec, (uint) (ev)->time.tv_usec, \
 			(ev)->type, (ev)->code, __FILE__, __LINE__ \
 		);
 	
 	#define Protocol_Assumption(desc, test) \
 		if (!(test)) \
-			fprintf( stderr, "\nFAILED %s @ %s: %u.\n", \
+			fprintf( stderr, "FAILED %s @ %s: %u.\n", \
 				desc,__FILE__, __LINE__ \
 			);
 
@@ -46,7 +46,6 @@
 #endif
 
 
-typedef uint_fast32_t uint;
 typedef struct input_event Event;
 
 #endif
