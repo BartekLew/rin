@@ -1,10 +1,8 @@
-#include "rin.h"
 #include "events.h"
+#include "common.h"
 
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
+
+void sync_action (Event *in, Context *ctx);
 
 Handler handlers[] = {
 	[EV_SYN] = sync_action,
@@ -17,19 +15,36 @@ Handler handlers[] = {
 int main (int argc, char **argv) {
 	if (argc != 2)
 		return 1;
-	int fd = open (argv[1], O_RDONLY);
-	if (fd < 0)
+
+	if (!event_loop (argv[1], handlers, Handlers_Cnt))
 		return 2;
 
-	
-	Event	e;
-	Context	ctx;
-	while (read (fd, &e, sizeof(e)) == sizeof(e)) {
-		if (e.type < Handlers_Cnt && handlers[e.type] != NULL)
-			handlers[e.type](&e, &ctx);
-		else Unsupported(&e);
-	}
-
-	close(fd);
 	return 0;
 }
+
+void sync_action (Event *in, Context *ctx) {
+
+	#ifndef TESTIFY
+
+	if (ctx->completeness & CTX_TOUCH) {
+		/*
+			Not all fields are mandatory to happen, if not
+			assume value didn't change.
+		*/
+
+		printf( "cur @ %6u,%6u %6u %6u\r",
+			ctx->x, ctx->y, ctx->pressure, ctx->id
+		);
+	}
+
+	#else
+
+	printf( "\n" );
+
+	#endif
+
+	fflush(stdout);
+	ctx->completeness = 0;
+
+}
+

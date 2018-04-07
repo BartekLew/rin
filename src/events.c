@@ -1,31 +1,27 @@
-#include "rin.h"
-#include "common.h"
+#include "events.h"
+
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 
-void sync_action (Event *in, Context *ctx) {
+bool event_loop (const char *dev, const Handler *handlers, uint handlers_cnt ) {
+	int fd = open (dev, O_RDONLY);
+	if (fd < 0)
+		return false;
 
-	#ifndef TESTIFY
-
-	if (ctx->completeness & CTX_TOUCH) {
-		/*
-			Not all fields are mandatory to happen, if not
-			assume value didn't change.
-		*/
-
-		printf( "cur @ %6u,%6u %6u %6u\r",
-			ctx->x, ctx->y, ctx->pressure, ctx->id
-		);
+	
+	Event	e;
+	Context	ctx;
+	while (read (fd, &e, sizeof(e)) == sizeof(e)) {
+		if (e.type < handlers_cnt && handlers[e.type] != NULL)
+			handlers[e.type](&e, &ctx);
+		else Unsupported(&e);
 	}
 
-	#else
-
-	printf( "\n" );
-
-	#endif
-
-	fflush(stdout);
-	ctx->completeness = 0;
-
+	close(fd);
+	return true;
 }
 
 #define detail(Ev_Code, Ctx_Flag, Ctx_Field) \
