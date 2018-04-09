@@ -20,6 +20,7 @@ struct context {
 	/* Calibration data: */
 	Point		min, max, threshold;
 	int		up_down, left_right;	
+	int		ctxfd;
 };
 
 /* Completeness flags */

@@ -4,6 +4,7 @@
 /* Stuff that should be default. */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -45,6 +46,11 @@
 
 #endif
 
+#define Die(...) { \
+	printf (__VA_ARGS__); \
+	printf ("in %s @ %u\n", __FILE__, __LINE__); \
+	exit(42); \
+}
 
 typedef struct input_event Event;
 

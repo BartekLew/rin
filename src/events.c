@@ -5,6 +5,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <sys/mman.h>
+
 
 typedef void (*EventHandler) (Event *in, Context *ctx);
 
@@ -32,25 +34,67 @@ static void event_loop (const int fd, Context *ctx) {
 	}
 }
 
+Context *load_ctx (int devfd) {
+	int ctx_fd = open (Calibration_file, O_RDONLY);
+	bool have_ctx = ctx_fd > 0;
+	if (have_ctx)
+		close(ctx_fd);
+	ctx_fd = open (Calibration_file, O_RDWR|O_CREAT, (mode_t) 00600);
+	if (ctx_fd < 0)
+		Die("Cannot open %s for R/W\n", Calibration_file);
+
+	if (!have_ctx) {
+		Context c;
+		if (write (ctx_fd, &c, sizeof(Context)) < sizeof(c))
+			Die ("Cannot fit ctx structure in %s.\n",
+				Calibration_file
+			);
+		lseek(ctx_fd, 0, SEEK_SET);
+	}
+
+	Context *result = mmap (0, sizeof(Context), PROT_READ|PROT_WRITE,
+		MAP_SHARED, ctx_fd, 0
+	);
+	if (result == MAP_FAILED)
+		Die ("Mmap %s failed\n", Calibration_file);
+
+	if (!have_ctx) {
+		before_calibration (result);
+		result->point_handler = calibration_point;
+		event_loop (devfd, result);
+		finish_calibration (result);
+	}
+
+	result->ctxfd = ctx_fd;
+
+	return result;
+}
+
 bool event_app (const char *dev, Application app) {
 	int fd = open (dev, O_RDONLY);
 	if (fd < 0)
 		return false;
 
-	Context	ctx = { .point_handler = calibration_point };
+	Context *ctx = load_ctx(fd);
 
-	before_calibration (&ctx);
-	event_loop (fd, &ctx);
-	finish_calibration (&ctx);
+	Testify ("CTX: min=%ux%u max=%ux%u treshold=%ux%u\n",
+		ctx->min.x, ctx->min.y, ctx->max.x, ctx->max.y,
+		ctx->threshold.x, ctx->threshold.y
+	);
 
-	ctx.point_handler = app.point;
+	ctx->point_handler = app.point;
 	if (app.init != NULL)
-		app.init (&ctx);
+		app.init (ctx);
+
 	
-	event_loop (fd, &ctx);
+	event_loop (fd, ctx);
 
 	if (app.conclusion != NULL)
-		app.conclusion (&ctx);
+		app.conclusion (ctx);
+
+	int ctxfd = ctx->ctxfd;
+	munmap (ctx, sizeof(Context));
+	close (ctxfd);
 
 	close(fd);
 	return true;
