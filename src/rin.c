@@ -63,6 +63,20 @@ void print_square (const char *label, Point *min, Point *max) {
 	);
 }
 
+Point square_size (Point min, Point max) {
+	return (Point) {
+		.x = max.x - min.x,
+		.y = max.y - min.y
+	};
+}
+
+Point point_max (Point a, Point b) {
+	return (Point) {
+		.x = (a.x > b.x)? a.x : b.x,
+		.y = (a.y > b.y)? a.y : b.y
+	};
+}
+
 int main (int argc, char **argv) {
 	if (argc != 2)
 		return 1;
@@ -81,6 +95,12 @@ int main (int argc, char **argv) {
 	}
 
 	print_square ("Work space", &min, &max);
+
+	Point tsize = point_max (
+		square_size (tests[5].min, tests[5].max),
+		square_size (tests[4].min, tests[4].max)
+	);
+	printf ("%20s: %ux%u.\n", "Touch size", tsize.x, tsize.y);
 
 	return 0;
 }
