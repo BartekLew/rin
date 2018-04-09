@@ -23,7 +23,7 @@ head:
 	@echo "LIBS	= ${LIBS}"
 	@echo
 
-bin/rin: src/rin.c o/events.o 
+bin/rin: src/rin.c o/events.o o/calibration.o
 	@echo "	LNK	$@"
 	@${CC} ${CFLAGS} $^ -D${TYPE} -o $@ ${LIBS}
 	@echo

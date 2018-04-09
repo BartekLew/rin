@@ -1,4 +1,5 @@
 #include "events.h"
+#include "calibration.h"
 
 #include <unistd.h>
 #include <sys/types.h>
@@ -36,16 +37,20 @@ bool event_app (const char *dev, Application app) {
 	if (fd < 0)
 		return false;
 
-	Context	ctx = { .point_handler = app.point };
+	Context	ctx = { .point_handler = calibration_point };
+
+	before_calibration (&ctx);
+	event_loop (fd, &ctx);
+	finish_calibration (&ctx);
+
+	ctx.point_handler = app.point;
 	if (app.init != NULL)
 		app.init (&ctx);
 	
-	do {
-		event_loop (fd, &ctx);
-	
-		if (app.conclusion != NULL)
-			app.conclusion (&ctx);
-	} while (ctx.point_handler != NULL);
+	event_loop (fd, &ctx);
+
+	if (app.conclusion != NULL)
+		app.conclusion (&ctx);
 
 	close(fd);
 	return true;
