@@ -4,10 +4,6 @@
 bool first_time = true;
 
 typedef struct {
-	uint x, y;
-} Point;
-
-typedef struct {
 	const char	*label;
 	Point		min, max;
 } Test;
@@ -36,28 +32,27 @@ void update_minmax(Point *min, Point *max, Point current) {
 		if (max->y < current.y) max->y = current.y;
 		else if (min->y > current.y) min->y = current.y;
 	}
-	
 }
 
-void point (Context *ctx) {
+void calibration_point (Context *ctx) {
 	Point *min = &tests[test_no].min;
 	Point *max = &tests[test_no].max;
 
 	if (ctx->pressure > 0) {
-		update_minmax (min, max, (Point){.x = ctx->x, .y = ctx->y});
+		update_minmax (min, max, (Point){.x = ctx->point.x, .y = ctx->point.y});
 	} else {
 		++test_no;
 		if (test_no == Tests_Cnt)
 			ctx->point_handler = NULL;
 		else {
-			printf( "please touch at %s corner.\n", tests[test_no].label );
+			printf( "please touch at %s.\n", tests[test_no].label );
 			first_time = true;
 		}
 	}
 }
 
-void print_square (const char *label, Point *min, Point *max) {
-	printf( "%20s: x = <%u;%u>\ty = <%u;%u>\t%ux%u\n",
+void testify_square (const char *label, Point *min, Point *max) {
+	Testify ("%20s: x = <%u;%u>\ty = <%u;%u>\t%ux%u\n",
 		label, min->x, max->x, min->y, max->y,
 		max->x - min->x, max->y - min->y
 	);
@@ -77,30 +72,64 @@ Point point_max (Point a, Point b) {
 	};
 }
 
-int main (int argc, char **argv) {
-	if (argc != 2)
-		return 1;
-
+void before_calibration (Context *ctx) {
 	printf( "please touch at %s.\n", tests[0].label );
-	if (!event_loop (argv[1], &point))
-		return 2;
+}
 
+void calibrated_point (Context *ctx) {
+	if (ctx->last.x - ctx->point.x < ctx->threshold.x
+		&& ctx->last.y - ctx->point.y < ctx->threshold.y )
+
+		return;
+
+	float	x = ((float)ctx->point.x - ctx->min.x) / ctx->up_down;
+	float	y = ((float)ctx->point.y - ctx->min.y) / ctx->left_right;
+	printf ("%fx%f\r", x, y);
+
+	ctx->last = ctx->point;
+}
+
+void finish_calibration (Context *ctx) {
 	Point	min = tests[0].min,
 		max = tests[0].max;
 
 	for (uint i = 0; i < Tests_Cnt; i++) {
-		print_square (tests[i].label, &tests[i].min, &tests[i].max);
+		testify_square (tests[i].label, &tests[i].min, &tests[i].max);
 		update_minmax (&min, &max, tests[i].min);
 		update_minmax (&min, &max, tests[i].max);
 	}
 
-	print_square ("Work space", &min, &max);
+	testify_square ("Work space", &min, &max);
 
-	Point tsize = point_max (
+	ctx->min = min;
+	ctx->max = max;
+
+	ctx->threshold = point_max (
 		square_size (tests[5].min, tests[5].max),
 		square_size (tests[4].min, tests[4].max)
 	);
-	printf ("%20s: %ux%u.\n", "Touch size", tsize.x, tsize.y);
+	Testify ("%20s: %ux%u.\n", "Touch size", ctx->threshold.x, ctx->threshold.y);
+
+	ctx->up_down = (tests[2].min.y > tests[0].max.y)
+				? max.y - min.y : min.y - max.y;
+	ctx->left_right = (tests[1].min.x > tests[0].max.x)
+				? max.x - min.x : min.x - max.x;
+
+	Testify ("\t\t  UD: %d ; LR: %d\n", ctx->up_down, ctx->left_right);
+
+	ctx->point_handler = &calibrated_point;
+}
+
+int main (int argc, char **argv) {
+	if (argc != 2)
+		return 1;
+
+	if (!event_app (argv[1], (Application) {
+		.init		= &before_calibration,
+		.point		= &calibration_point,
+		.conclusion	= &finish_calibration
+	}))
+		return 2;
 
 	return 0;
 }

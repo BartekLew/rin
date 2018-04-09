@@ -8,10 +8,18 @@
 typedef struct context Context;
 typedef void (*Handler) (Context *ctx);
 
+typedef struct {
+	uint x, y;
+} Point;
+
 struct context {
-	uint		completeness;
-	uint		x, y, pressure;
+	uint		completeness, pressure;
+	Point		point, last;
 	Handler		point_handler;
+
+	/* Calibration data: */
+	Point		min, max, threshold;
+	int		up_down, left_right;	
 };
 
 /* Completeness flags */
@@ -21,6 +29,11 @@ struct context {
 #define CTX_UNIQ_PRESS	0x08
 #define CTX_TOUCH	(CTX_X | CTX_Y | CTX_PRESSURE | CTX_UNIQ_PRESS)
 
-bool event_loop (const char *dev, Handler point_handler);
+typedef struct {
+	Handler init, point, conclusion;
+} Application;
+
+
+bool event_app (const char *dev, Application app);
 
 #endif

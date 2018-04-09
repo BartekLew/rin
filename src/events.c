@@ -7,9 +7,9 @@
 
 typedef void (*EventHandler) (Event *in, Context *ctx);
 
-void sync_action (Event *in, Context *ctx);
-void set_point (Event *in, Context *ctx);
-void ignore (Event *ev, Context *ctx);
+static void sync_action (Event *in, Context *ctx);
+static void set_point (Event *in, Context *ctx);
+static void ignore (Event *ev, Context *ctx);
 
 EventHandler handlers[] = {
 	[EV_SYN] = sync_action,
@@ -19,20 +19,33 @@ EventHandler handlers[] = {
 #define Handlers_Cnt sizeof(handlers) / sizeof(EventHandler)
 
 
-bool event_loop (const char *dev, Handler h) {
+static void event_loop (const int fd, Context *ctx) {
+	Event	e;
+
+	while ( ctx->point_handler != NULL
+		&& read (fd, &e, sizeof(e)) == sizeof(e)) {
+
+		if (e.type < Handlers_Cnt && handlers[e.type] != NULL)
+			handlers[e.type](&e, ctx);
+		else Unsupported(&e);
+	}
+}
+
+bool event_app (const char *dev, Application app) {
 	int fd = open (dev, O_RDONLY);
 	if (fd < 0)
 		return false;
 
-	Event	e;
-	Context	ctx = { .point_handler = h };
-	while ( ctx.point_handler != NULL
-		&& read (fd, &e, sizeof(e)) == sizeof(e)) {
-
-		if (e.type < Handlers_Cnt && handlers[e.type] != NULL)
-			handlers[e.type](&e, &ctx);
-		else Unsupported(&e);
-	}
+	Context	ctx = { .point_handler = app.point };
+	if (app.init != NULL)
+		app.init (&ctx);
+	
+	do {
+		event_loop (fd, &ctx);
+	
+		if (app.conclusion != NULL)
+			app.conclusion (&ctx);
+	} while (ctx.point_handler != NULL);
 
 	close(fd);
 	return true;
@@ -49,33 +62,27 @@ bool event_loop (const char *dev, Handler h) {
 		ctx->Ctx_Field = in->value; \
 	}
 
-	void set_point (Event *in, Context *ctx) {
-		detail (ABS_X, CTX_X, x)
-		else detail (ABS_Y, CTX_Y, y)
+	static void set_point (Event *in, Context *ctx) {
+		detail (ABS_X, CTX_X, point.x)
+		else detail (ABS_Y, CTX_Y, point.y)
 		else detail (ABS_PRESSURE, CTX_PRESSURE, pressure)
 		else Unsupported(in);
 	}
 
 #undef detail
 
-void ignore (Event *ev, Context *ctx) {
+static void ignore (Event *ev, Context *ctx) {
 	UNUSED(ev);
 	UNUSED(ctx);
 }
 
-void sync_action (Event *in, Context *ctx) {
+static void sync_action (Event *in, Context *ctx) {
 
 	if (ctx->completeness & CTX_TOUCH) {
-		/*
-			Not all fields are mandatory to happen, if not
-			assume value didn't change.
-		*/
-
 		ctx->point_handler(ctx);
 	}
 
 	fflush(stdout);
 	ctx->completeness = 0;
-
 }
 
