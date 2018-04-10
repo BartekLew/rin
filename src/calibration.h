@@ -18,7 +18,7 @@ typedef struct {
 
 Calibration get_calibration(int devfd);
 
-#define Calib(Ctx) (Ctx->calibration.data)
+#define Calib(Ctx) ((Ctx)->calibration.data)
 
 void before_calibration (Context *ctx);
 void calibration_point (Context *ctx);

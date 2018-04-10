@@ -8,8 +8,8 @@ void calibrated_point (Context *ctx) {
 
 		return;
 
-	float	x = ((float)ctx->point.x - Calib(ctx)->min.x) / Calib(ctx)->up_down;
-	float	y = ((float)ctx->point.y - Calib(ctx)->min.y) / Calib(ctx)->left_right;
+	float	x = ((float)ctx->point.x - Calib(ctx)->min.x) / Calib(ctx)->left_right;
+	float	y = ((float)ctx->point.y - Calib(ctx)->min.y) / Calib(ctx)->up_down;
 	printf ("\t%f\tx\t%f\r", x, y);
 
 	ctx->last = ctx->point;
