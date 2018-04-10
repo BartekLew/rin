@@ -8,6 +8,12 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <sys/mman.h>
+
 
 #define UNUSED(var) (void)(var)
 
@@ -53,5 +59,10 @@
 }
 
 typedef struct input_event Event;
+
+typedef struct {
+	uint x, y;
+} Point;
+typedef struct context Context;
 
 #endif

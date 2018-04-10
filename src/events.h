@@ -2,25 +2,18 @@
 #define __H_EVENTS
 
 #include "common.h"
+#include "calibration.h"
 
 #include <linux/input.h>
 
-typedef struct context Context;
 typedef void (*Handler) (Context *ctx);
-
-typedef struct {
-	uint x, y;
-} Point;
 
 struct context {
 	uint		completeness, pressure;
 	Point		point, last;
 	Handler		point_handler;
 
-	/* Calibration data: */
-	Point		min, max, threshold;
-	int		up_down, left_right;	
-	int		ctxfd;
+	Calibration	calibration;
 };
 
 /* Completeness flags */

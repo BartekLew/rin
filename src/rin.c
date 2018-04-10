@@ -3,13 +3,13 @@
 
 
 void calibrated_point (Context *ctx) {
-	if (ctx->last.x - ctx->point.x < ctx->threshold.x
-		&& ctx->last.y - ctx->point.y < ctx->threshold.y )
+	if (ctx->last.x - ctx->point.x < Calib(ctx)->threshold.x
+		&& ctx->last.y - ctx->point.y < Calib(ctx)->threshold.y )
 
 		return;
 
-	float	x = ((float)ctx->point.x - ctx->min.x) / ctx->up_down;
-	float	y = ((float)ctx->point.y - ctx->min.y) / ctx->left_right;
+	float	x = ((float)ctx->point.x - Calib(ctx)->min.x) / Calib(ctx)->up_down;
+	float	y = ((float)ctx->point.y - Calib(ctx)->min.y) / Calib(ctx)->left_right;
 	printf ("\t%f\tx\t%f\r", x, y);
 
 	ctx->last = ctx->point;

@@ -1,6 +1,9 @@
 #include "common.h"
 #include "events.h"
+#include "calibration.h"
 
+
+void event_loop (const int fd, Context *ctx);
 
 bool first_time = true;
 
@@ -73,21 +76,25 @@ void finish_calibration (Context *ctx) {
 
 	testify_square ("Work space", &min, &max);
 
-	ctx->min = min;
-	ctx->max = max;
+	Calib(ctx)->min = min;
+	Calib(ctx)->max = max;
 
-	ctx->threshold = point_max (
+	Calib(ctx)->threshold = point_max (
 		square_size (tests[5].min, tests[5].max),
 		square_size (tests[4].min, tests[4].max)
 	);
-	Testify ("%20s: %ux%u.\n", "Touch size", ctx->threshold.x, ctx->threshold.y);
+	Testify ("%20s: %ux%u.\n", "Touch size",
+		Calib(ctx)->threshold.x, Calib(ctx)->threshold.y
+	);
 
-	ctx->up_down = (tests[2].min.y > tests[0].max.y)
+	Calib(ctx)->up_down = (tests[2].min.y > tests[0].max.y)
 				? max.y - min.y : min.y - max.y;
-	ctx->left_right = (tests[1].min.x > tests[0].max.x)
+	Calib(ctx)->left_right = (tests[1].min.x > tests[0].max.x)
 				? max.x - min.x : min.x - max.x;
 
-	Testify ("\t\t  UD: %d ; LR: %d\n", ctx->up_down, ctx->left_right);
+	Testify ("\t\t  UD: %d ; LR: %d\n",
+		Calib(ctx)->up_down, Calib(ctx)->left_right
+	);
 }
 
 void calibration_point (Context *ctx) {
@@ -105,5 +112,43 @@ void calibration_point (Context *ctx) {
 			first_time = true;
 		}
 	}
+}
+
+Calibration get_calibration (int devfd) {
+	Calibration result = { .fd = open (Calibration_file, O_RDONLY) };
+	bool have_ctx = result.fd > 0;
+	if (have_ctx)
+		close(result.fd);
+	result.fd = open (Calibration_file, O_RDWR|O_CREAT, (mode_t) 00600);
+	if (result.fd < 0)
+		Die("Cannot open %s for R/W\n", Calibration_file);
+
+	if (!have_ctx) {
+		Context c;
+		if (write (result.fd, &c, sizeof(Context)) < sizeof(c))
+			Die ("Cannot fit ctx structure in %s.\n",
+				Calibration_file
+			);
+		lseek(result.fd, 0, SEEK_SET);
+	}
+
+	result.data = mmap (0, sizeof(Context), PROT_READ|PROT_WRITE,
+		MAP_SHARED, result.fd, 0
+	);
+	if (result.data == MAP_FAILED)
+		Die ("Mmap %s failed\n", Calibration_file);
+
+	if (!have_ctx) {
+		Context c = {
+			.point_handler = calibration_point,
+			.calibration = result
+		};
+
+		before_calibration (&c);
+		event_loop (devfd, &c);
+		finish_calibration (&c);
+	}
+
+	return result;
 }
 
