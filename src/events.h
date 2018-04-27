@@ -5,6 +5,7 @@
 #include "calibration.h"
 
 #include <linux/input.h>
+#include <fblib.h>
 
 typedef void (*Handler) (Context *ctx);
 
@@ -14,6 +15,7 @@ struct context {
 	Handler		point_handler;
 
 	Calibration	calibration;
+	Screen		screen;
 };
 
 /* Completeness flags */
@@ -24,7 +26,8 @@ struct context {
 #define CTX_TOUCH	(CTX_X | CTX_Y | CTX_PRESSURE | CTX_UNIQ_PRESS)
 
 typedef struct {
-	Handler init, point, conclusion;
+	Handler		init, point, conclusion;
+	Screen		screen;
 } Application;
 
 
