@@ -1,5 +1,5 @@
 CC=gcc 
-LIBS=-lrt
+LIBS=-lrt -lm
 CFLAGS=-Wall -pedantic -std=c99
 INCLUDE=-Ifblib/
 TYPE=RELEASE
