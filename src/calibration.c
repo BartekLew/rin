@@ -26,8 +26,8 @@ uint test_no = 0;
 
 void testify_square (const char *label, Point *min, Point *max) {
 	Testify ("%20s: x = <%u;%u>\ty = <%u;%u>\t%ux%u\n",
-		label, min->x, max->x, min->y, max->y,
-		max->x - min->x, max->y - min->y
+		label, _u min->x, _u max->x, _u min->y, _u max->y,
+		_u max->x - _u min->x, _u max->y - _u min->y
 	);
 }
 
@@ -84,7 +84,7 @@ void finish_calibration (Context *ctx) {
 		square_size (tests[4].min, tests[4].max)
 	);
 	Testify ("%20s: %ux%u.\n", "Touch size",
-		Calib(ctx)->threshold.x, Calib(ctx)->threshold.y
+		_u Calib(ctx)->threshold.x, _u Calib(ctx)->threshold.y
 	);
 
 	Calib(ctx)->up_down = (tests[2].min.y > tests[0].max.y)

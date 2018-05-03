@@ -17,6 +17,8 @@
 
 #define UNUSED(var) (void)(var)
 
+#define _u (unsigned int)
+
 #ifdef TESTIFY
 
 	#define DEBUG
@@ -35,7 +37,7 @@
 
 	#define Unsupported(ev) \
 		fprintf( stderr, "t=%u.%06u %x/%x UNSUPPORTED @ %s:%u\n", \
-			(uint) (ev)->time.tv_sec, (uint) (ev)->time.tv_usec, \
+			(unsigned int) (ev)->time.tv_sec, (unsigned int) (ev)->time.tv_usec, \
 			(ev)->type, (ev)->code, __FILE__, __LINE__ \
 		);
 	

@@ -40,9 +40,9 @@ bool event_app (const char *dev, Application app) {
 	};
 
 	Testify ("CTX: min=%ux%u max=%ux%u treshold=%ux%u\n",
-		Calib(&ctx)->min.x, Calib(&ctx)->min.y,
-		Calib(&ctx)->max.x, Calib(&ctx)->max.y,
-		Calib(&ctx)->threshold.x, Calib(&ctx)->threshold.y
+		_u Calib(&ctx)->min.x, _u Calib(&ctx)->min.y,
+		_u Calib(&ctx)->max.x, _u Calib(&ctx)->max.y,
+		_u Calib(&ctx)->threshold.x, _u Calib(&ctx)->threshold.y
 	);
 
 	if (app.init != NULL)
