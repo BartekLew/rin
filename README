@@ -15,15 +15,6 @@ don't really need multiwindow. Except that it turned out that such an interface
 give me much more information than X11. Cool. I already see that I can get
 multitouch data, but I don't support it yet.
 
-Except that I have ability to recognize different input sources (USB Mouse,
-touchpad, touchpad buttons, etc.), but probably I won't use that as I aim
-at touchscreen only environment.
-
-
-Output
-------
-
-I produce two binaries — debug (will check all assumptions, will print all
-unsupported stuff) and release which print only what I'm interested in.
-This is to always validate DEBUG/REALEASE code. Except that assumptions
-very often happen to be wrong here so I always code them and check.
+I have integrated it all with fblib (also on my github) so that I can draw on
+the screen using touchscreen. Using utilities from this repo, I can also record
+framebuffer state and translate it to ppm format frames an then (using ffmpeg) convert it to video.
