@@ -3,6 +3,7 @@ LIBS=-lrt -lm
 CFLAGS=-Wall -pedantic -std=c99
 INCLUDE=-Ifblib/
 TYPE=RELEASE
+OPTS=
 
 fblib.a_URL=https://github.com/BartekLew/fblib
 
@@ -11,7 +12,7 @@ ifeq ($(TYPE), DEBUG)
 endif
 
 
-all: head bin/rin
+all: head bin/rin bin/recall
 
 rebuild: clean head bin/rin
 
@@ -24,16 +25,22 @@ head:
 	@echo "CFLAGS	= ${CFLAGS}"
 	@echo "INCLUDE	= ${INCLUDE}"
 	@echo "LIBS	= ${LIBS}"
+	@echo "OPTS	= ${OPTS}"
 	@echo
 
-bin/rin: src/rin.c o/events.o o/calibration.o fblib/lib/fblib.a
+bin/rin: src/rin.c o/events.o o/calibration.o o/interface.o fblib/lib/fblib.a
 	@echo "	LNK	$@"
-	@${CC} ${CFLAGS} ${INCLUDE} $^ -D${TYPE} -o $@ ${LIBS}
+	@${CC} ${CFLAGS} ${INCLUDE} $^ -D${TYPE} ${OPTS} -o $@ ${LIBS}
+	@echo
+
+bin/recall: src/recall.c o/interface.o fblib/lib/fblib.a
+	@echo "	LNK	$@"
+	@${CC} ${CFLAGS} ${INCLUDE} $^ -D${TYPE} ${OPTS} -o $@ ${LIBS}
 	@echo
 
 o/%.o: src/%.c
 	@echo "	CC	$@"
-	@${CC} ${CFLAGS} ${INCLUDE} -c $< -D${TYPE} -o $@
+	@${CC} ${CFLAGS} ${INCLUDE} -c $< -D${TYPE} ${OPTS} -o $@
 
 %.a:
 	@echo "Missing dependency: $@. Link it in this directory."
