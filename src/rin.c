@@ -34,17 +34,12 @@ void calibrated_point (Context *ctx) {
 
 		return;
 
-	float	x = ((float)ctx->point.x - Calib(ctx)->min.x) / Calib(ctx)->left_right;
-	float	y = ((float)ctx->point.y - Calib(ctx)->min.y) / Calib(ctx)->up_down;
+	float	x = get_x(ctx);
+	float	y = get_y(ctx);
 
 	if (x > 0.9 && y > 0.9)
 		ctx->point_handler = NULL; // quit
 
-#if 0
-	dot_rgb (ctx->screen, x * ctx->screen.width, y * ctx->screen.height,
-			127, 255, 0
-	);
-#endif
 	blur_point (ctx->screen, (Point){ .x = x * ctx->screen.width,
 					  .y = y * ctx->screen.height },
 		20, (Color) { .r = 25, .g = 142, .b = 100 }
