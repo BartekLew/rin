@@ -1,4 +1,4 @@
-CC=gcc 
+CC=gcc -D_POSIX_C_SOURCE=199309L
 LIBS=-lrt -lm
 CFLAGS=-Wall -pedantic -std=c99
 INCLUDE=-Ifblib/
@@ -14,7 +14,7 @@ endif
 
 all: head bin/rin bin/recall
 
-rebuild: clean head bin/rin
+rebuild: clean all
 
 head:
 	@mkdir -p bin/
@@ -31,12 +31,10 @@ head:
 bin/rin: src/rin.c o/events.o o/calibration.o o/interface.o fblib/lib/fblib.a
 	@echo "	LNK	$@"
 	@${CC} ${CFLAGS} ${INCLUDE} $^ -D${TYPE} ${OPTS} -o $@ ${LIBS}
-	@echo
 
 bin/recall: src/recall.c o/interface.o fblib/lib/fblib.a
 	@echo "	LNK	$@"
 	@${CC} ${CFLAGS} ${INCLUDE} $^ -D${TYPE} ${OPTS} -o $@ ${LIBS}
-	@echo
 
 o/%.o: src/%.c
 	@echo "	CC	$@"

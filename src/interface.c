@@ -1,6 +1,8 @@
 #include "interface.h"
 
 #include <math.h>
+#include <time.h>
+#include <sys/time.h>
 
 #define sub_or_zero(A,B) ((A > B) ? A - B : 0)
 #define add_or_max(A,B,Max) ((A+B < Max) ? A+B : Max)
@@ -31,5 +33,20 @@ void blur_point (Screen s, Point p, uint r, Color c) {
 
 void on_point (Screen s, Point p) {
 	blur_point (s, p, 20, (Color) { .r = 25, .g = 142, .b = 100 } );
+}
+
+uint get_time (void) {
+	static struct timespec base = {0};
+
+	struct timespec t;
+	clock_gettime (CLOCK_REALTIME, &t);
+
+	if (base.tv_sec == 0 && base.tv_nsec == 0) {
+		base = t;
+		return 0;
+	} else {
+		return (t.tv_sec - base.tv_sec) * 100
+			+ (t.tv_nsec - base.tv_nsec) / 10000000;
+	}
 }
 
