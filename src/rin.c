@@ -5,12 +5,15 @@
 #include <math.h>
 
 
-#define around_square(X, Y, R) \
-	for (uint y = Y - r; y <= Y + r; y++) \
-		for (uint x = X - r; x <= X + r; x++)
+#define sub_or_zero(A,B) ((A > B) ? A - B : 0)
+#define add_or_max(A,B,Max) ((A+B < Max) ? A+B : Max)
+
+#define around_square(S, X, Y, R) \
+	for (uint y = sub_or_zero (Y,R); y <= add_or_max (Y,R,S.height); y++)\
+		for (uint x = sub_or_zero(X,R); x <= add_or_max (X,R,S.width); x++)
 
 void blur_point (Screen s, Point p, uint r, Color c) {
-	around_square (p.x, p.y, r) {
+	around_square (s, p.x, p.y, r) {
 		float	dx = (float)x - (float)p.x,
 			dy = (float)y - (float)p.y;
 		float	ar = sqrtf(dx*dx + dy*dy);
