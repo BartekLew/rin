@@ -132,6 +132,19 @@ void store_act (Screen *s, char *arg, Color mask) {
 	}
 }
 
+void clear_act (Screen *s, char *arg, Color mask) {
+	UNUSED(arg);
+	UNUSED(mask);
+
+	for (uint y = 0; y < s->height; y++) {
+		for (uint x = 0; x < s->width; x++) {
+			dot_rgb (*s, x, y,
+				brush_color.r, brush_color.g, brush_color.b
+			);
+		}
+	}
+}
+
 #define Color_tok(KEY) .token = KEY, .action = &color_act
 
 CmdTok command_tokens[] = {
@@ -141,7 +154,8 @@ CmdTok command_tokens[] = {
 	{Color_tok('x'), .mask = {.r = 0xff, .g = 0xff, .b = 0xff}},
 	{.token = 's', .action = &store_act},
 	{.token = 'l', .action = &load_act},
-	{.token = 'd', .action = &diff_act}
+	{.token = 'd', .action = &diff_act},
+	{.token = 'c', .action = &clear_act}
 };
 
 void *prompt (char *buf, size_t buff_size) {
