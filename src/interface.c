@@ -48,17 +48,36 @@ uint get_time (void) {
 pthread_t console;
 #define Cmd_max 80
 
-struct ct {
-	Color mask;
-	char  token;
-} color_tokens[] = {
-	{.token = 'r', .mask = {.r = 0xff}},
-	{.token = 'g', .mask = {.g = 0xff}},
-	{.token = 'b', .mask = {.b = 0xff}},
-	{.token = 'x', .mask = {.r = 0xff, .g = 0xff, .b = 0xff}}
-};
+typedef void (*Action) (char *arg, Color mask);
+typedef struct {
+	Color	mask;
+	Action	action;
+	char	token;
+} CmdTok;
 
-#define ct_size sizeof(struct ct)
+void color_act (char *arg, Color mask) {
+	unsigned int val;
+
+	if (sscanf (arg, "%x", &val) != 1)
+		Warn ("wrong parameter: %s", arg)
+	else {
+		if (mask.r != 0x00)
+			brush_color.r = val;
+		if (mask.g != 0x00)
+			brush_color.g = val;
+		if (mask.b != 0x00)
+			brush_color.b = val;
+	}
+}
+
+#define Color_tok(KEY) .token = KEY, .action = &color_act
+
+CmdTok command_tokens[] = {
+	{Color_tok('r'), .mask = {.r = 0xff}},
+	{Color_tok('g'), .mask = {.g = 0xff}},
+	{Color_tok('b'), .mask = {.b = 0xff}},
+	{Color_tok('x'), .mask = {.r = 0xff, .g = 0xff, .b = 0xff}}
+};
 
 void *prompt (char *buf, size_t buff_size) {
 	printf ("%.2x;%.2x;%.2x>", brush_color.r, brush_color.g, brush_color.b);
@@ -70,21 +89,10 @@ void *command_loop (void *ctx) {
 	
 	char cmd[Cmd_max];
 	while (prompt (cmd, Cmd_max) != NULL) {
-		for (uint i = 0; i < sizeof(color_tokens)/ct_size; i++) {
-			if (color_tokens[i].token == cmd[0]) {
-				Color mask = color_tokens[i].mask;
-				unsigned int val;
-
-				if (sscanf (cmd+1, "%x", &val) != 1)
-					Warn ("wrong parameter: %s", cmd)
-				else {
-					if (mask.r != 0x00)
-						brush_color.r = val;
-					if (mask.g != 0x00)
-						brush_color.g = val;
-					if (mask.b != 0x00)
-						brush_color.b = val;
-				}
+		for (uint i = 0; i < sizeof(command_tokens)/sizeof(CmdTok); i++) {
+			CmdTok tok = command_tokens[i];
+			if (tok.token == cmd[0]) {
+				tok.action (cmd+1, tok.mask);
 			}
 		}
 	}
