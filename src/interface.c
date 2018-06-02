@@ -48,14 +48,15 @@ uint get_time (void) {
 pthread_t console;
 #define Cmd_max 80
 
-typedef void (*Action) (char *arg, Color mask);
+typedef void (*Action) (Screen *s, char *arg, Color mask);
 typedef struct {
 	Color	mask;
 	Action	action;
 	char	token;
 } CmdTok;
 
-void color_act (char *arg, Color mask) {
+void color_act (Screen *s, char *arg, Color mask) {
+	UNUSED(s);
 	unsigned int val;
 
 	if (sscanf (arg, "%x", &val) != 1)
@@ -70,13 +71,47 @@ void color_act (char *arg, Color mask) {
 	}
 }
 
+#define File_max 20
+
+void load_act (Screen *s, char *arg, Color mask) {
+	UNUSED(mask);
+
+	char file[File_max];
+	sscanf (arg, "%s", file);
+	FILE *i = fopen (file, "r");
+	if (i == NULL)
+		Warn ("Unable to open file: %s", file)
+	else {
+		if (fread (s->buffer, s->size, 1, i) != 1)
+			Warn ("write error: %s", file);
+		fclose(i);
+	}
+}
+
+void store_act (Screen *s, char *arg, Color mask) {
+	UNUSED(mask);
+
+	char file[File_max];
+	sscanf (arg, "%s", file);
+	FILE *o = fopen (file, "w");
+	if (o == NULL)
+		Warn ("Unable to open file: %s", file)
+	else {
+		if (fwrite (s->buffer, s->size, 1, o) != 1)
+			Warn ("write error: %s", file);
+		fclose(o);
+	}
+}
+
 #define Color_tok(KEY) .token = KEY, .action = &color_act
 
 CmdTok command_tokens[] = {
 	{Color_tok('r'), .mask = {.r = 0xff}},
 	{Color_tok('g'), .mask = {.g = 0xff}},
 	{Color_tok('b'), .mask = {.b = 0xff}},
-	{Color_tok('x'), .mask = {.r = 0xff, .g = 0xff, .b = 0xff}}
+	{Color_tok('x'), .mask = {.r = 0xff, .g = 0xff, .b = 0xff}},
+	{.token = 's', .action = &store_act},
+	{.token = 'l', .action = &load_act}
 };
 
 void *prompt (char *buf, size_t buff_size) {
@@ -85,14 +120,14 @@ void *prompt (char *buf, size_t buff_size) {
 }
 
 void *command_loop (void *ctx) {
-	UNUSED(ctx);
+	Screen *s = (Screen *)ctx;
 	
 	char cmd[Cmd_max];
 	while (prompt (cmd, Cmd_max) != NULL) {
 		for (uint i = 0; i < sizeof(command_tokens)/sizeof(CmdTok); i++) {
 			CmdTok tok = command_tokens[i];
 			if (tok.token == cmd[0]) {
-				tok.action (cmd+1, tok.mask);
+				tok.action (s, cmd+1, tok.mask);
 			}
 		}
 	}
@@ -100,8 +135,8 @@ void *command_loop (void *ctx) {
 	return NULL;
 }
 
-void listen_commands(void) {
-	if (pthread_create (&console, NULL, &command_loop, NULL) != 0)
+void listen_commands(Screen *s) {
+	if (pthread_create (&console, NULL, &command_loop, s) != 0)
 		Die ("Unable to spawn thread");
 }
 

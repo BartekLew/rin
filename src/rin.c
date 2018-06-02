@@ -38,7 +38,7 @@ int fb_main (Screen screen, Strings args) {
 	if (args.count != 2)
 		return 1;
 
-	listen_commands();
+	listen_commands(&screen);
 
 	if (!event_app (args.vals[1], (Application) {
 		.point		= &calibrated_point,
