@@ -19,15 +19,7 @@ void blur_point (Screen s, Point p, uint r, Color c) {
 		float	ar = sqrtf(dx*dx + dy*dy);
 
 		if (ar <= r) {
-			float	filling = ar/r;
-
-			Color	found = get_rgb(s, x, y);
-			float	r = (c.r * filling + found.r / filling)/2,
-				g = (c.g * filling + found.g / filling)/2,
-				b = (c.b * filling + found.b / filling)/2;
-
-			dot_rgb (s, x, y, (r < 255)?r:255, (g<255)?r:255,
-					(b < 255)?b:255 );
+			dot_rgb (s, x, y, c.r, c.g, c.b);
 		}
 	}
 }
@@ -68,11 +60,16 @@ struct ct {
 
 #define ct_size sizeof(struct ct)
 
+void *prompt (char *buf, size_t buff_size) {
+	printf ("%.2x;%.2x;%.2x>", brush_color.r, brush_color.g, brush_color.b);
+	return fgets (buf, buff_size, stdin);
+}
+
 void *command_loop (void *ctx) {
 	UNUSED(ctx);
 	
 	char cmd[Cmd_max];
-	while (fgets (cmd, Cmd_max-1, stdin) != NULL) {
+	while (prompt (cmd, Cmd_max) != NULL) {
 		for (uint i = 0; i < sizeof(color_tokens)/ct_size; i++) {
 			if (color_tokens[i].token == cmd[0]) {
 				Color mask = color_tokens[i].mask;
