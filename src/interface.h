@@ -9,6 +9,7 @@ typedef struct {
 } SerializedPoint;
 
 void on_point (Screen s, Point p);
+void listen_commands(void);
 
 // Get time in 1/100s resolution
 uint get_time (void);

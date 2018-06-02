@@ -56,8 +56,13 @@
 
 #define Die(...) { \
 	printf (__VA_ARGS__); \
-	printf ("in %s @ %u\n", __FILE__, __LINE__); \
+	printf ("(D) in %s @ %u\n", __FILE__, __LINE__); \
 	exit(42); \
+}
+
+#define Warn(...) { \
+	printf (__VA_ARGS__); \
+	printf ("(W) in %s @ %u\n", __FILE__, __LINE__); \
 }
 
 typedef struct input_event Event;

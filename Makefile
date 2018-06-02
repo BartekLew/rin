@@ -1,5 +1,5 @@
 CC=gcc -D_POSIX_C_SOURCE=199309L
-LIBS=-lrt -lm
+LIBS=-lrt -lm -lpthread
 CFLAGS=-Wall -pedantic -std=c99
 INCLUDE=-Ifblib/
 TYPE=RELEASE
