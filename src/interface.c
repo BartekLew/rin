@@ -88,6 +88,35 @@ void load_act (Screen *s, char *arg, Color mask) {
 	}
 }
 
+void diff_act (Screen *s, char *arg, Color mask) {
+	UNUSED(mask);
+
+	char file[File_max];
+	sscanf (arg, "%s", file);
+	FILE *i = fopen (file, "r");
+	if (i == NULL)
+		Warn ("Unable to open file: %s", file)
+	else {
+		char ibuf[s->size];
+		Screen is = *s;
+		is.buffer = ibuf;
+
+		if (fread (ibuf, s->size, 1, i) != 1)
+			Warn ("write error: %s", file);
+
+		for (uint y = 0; y < is.height; y++){
+			for (uint x = 0; x < is.width; x++) {
+				Color ic = get_rgb (is, x, y); 
+				Color c = get_rgb (*s, x, y);
+
+				dot_rgb(*s, x, y, abs(ic.r-c.r), abs(ic.g-c.g), abs(ic.b-c.b));
+			}
+		}
+
+		fclose(i);
+	}
+}
+
 void store_act (Screen *s, char *arg, Color mask) {
 	UNUSED(mask);
 
@@ -111,7 +140,8 @@ CmdTok command_tokens[] = {
 	{Color_tok('b'), .mask = {.b = 0xff}},
 	{Color_tok('x'), .mask = {.r = 0xff, .g = 0xff, .b = 0xff}},
 	{.token = 's', .action = &store_act},
-	{.token = 'l', .action = &load_act}
+	{.token = 'l', .action = &load_act},
+	{.token = 'd', .action = &diff_act}
 };
 
 void *prompt (char *buf, size_t buff_size) {
