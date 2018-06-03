@@ -5,7 +5,9 @@
 
 typedef struct {
 	float	x, y;
-	uint	t;
+	uint	time;
+	Color   color;
+	uint	size;
 } SerializedPoint;
 
 void on_point (Screen s, Point p);

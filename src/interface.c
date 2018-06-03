@@ -4,6 +4,7 @@
 #include <time.h>
 #include <sys/time.h>
 #include <pthread.h>
+#include <ctype.h>
 
 #define sub_or_zero(A,B) ((A > B) ? A - B : 0)
 #define add_or_max(A,B,Max) ((A+B < Max) ? A+B : Max)
@@ -25,9 +26,28 @@ void blur_point (Screen s, Point p, uint r, Color c) {
 }
 
 Color brush_color = { .r = 25, .g = 142, .b = 100 };
+unsigned int brush_size = 10;
+FILE *record_file = NULL;
+uint record_start = 0;
 
 void on_point (Screen s, Point p) {
-	blur_point (s, p, 20, brush_color );
+	if (record_file != NULL) {
+		SerializedPoint pos = { .x = p.x, .y = p.y,
+			.time = get_time() - record_start, .color = brush_color,
+			.size = brush_size
+		};
+		fwrite (&pos, sizeof(pos), 1, record_file);
+	}
+
+
+	blur_point (s, p, brush_size, brush_color);
+}
+
+void close_record(void) {
+	if (record_file != NULL) {
+		fclose (record_file);
+		record_file = NULL;
+	}
 }
 
 uint get_time (void) {
@@ -145,6 +165,65 @@ void clear_act (Screen *s, char *arg, Color mask) {
 	}
 }
 
+void size_act (Screen *s, char *arg, Color mask) {
+	UNUSED(s);
+	UNUSED(mask);
+
+	unsigned int size;
+	if (sscanf (arg, "%x", &size) != 1)
+		Warn ("Expected size, got %s.", arg)
+	else {
+		brush_size = size;
+	}
+}
+
+void record_act (Screen *s, char *arg, Color mask) {
+	UNUSED(s);
+	UNUSED(mask);
+	
+	if (record_file != NULL)
+		close_record();
+
+	if (isalpha(arg[0])) {
+		char file[File_max];
+		sscanf (arg, "%s", file);
+		record_file = fopen (file, "w");
+		record_start = get_time();
+	}	
+}
+
+void replay_act (Screen *s, char *arg, Color mask) {
+	UNUSED(mask);
+	
+	if (isalpha(arg[0])) {
+		char file[File_max];
+		sscanf (arg, "%s", file);
+		FILE *record = fopen (file, "r");
+		if (record == NULL)
+			return;
+		SerializedPoint p;
+		uint start_time = get_time();
+
+		Color c = brush_color;
+		uint os = brush_size;
+
+		while (fread (&p, sizeof(p), 1, record) == 1) {
+			while (p.time + start_time > get_time());
+			brush_size = p.size;
+			brush_color = p.color;
+			on_point (*s, (Point){
+				.x = p.x,
+				.y = p.y
+			});
+		}
+
+		fclose (record);
+
+		brush_color = c;
+		brush_size = os;
+	}	
+}
+
 #define Color_tok(KEY) .token = KEY, .action = &color_act
 
 CmdTok command_tokens[] = {
@@ -155,7 +234,10 @@ CmdTok command_tokens[] = {
 	{.token = 's', .action = &store_act},
 	{.token = 'l', .action = &load_act},
 	{.token = 'd', .action = &diff_act},
-	{.token = 'c', .action = &clear_act}
+	{.token = 'c', .action = &clear_act},
+	{.token = 'p', .action = &size_act},
+	{.token = '>', .action = &record_act},
+	{.token = '<', .action = &replay_act}
 };
 
 void *prompt (char *buf, size_t buff_size) {

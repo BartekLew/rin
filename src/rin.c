@@ -6,15 +6,6 @@
 #include <time.h>
 
 
-#ifdef DUMP_POINTS
-	#define Dump_touch(X,Y,T) { \
-		SerializedPoint pos = {.x = X, .y = Y, .t = T}; \
-		fwrite (&pos, sizeof(pos), 1, stdout); \
-	}
-#else
-	#define Dump_touch(X,Y,T)
-#endif
-
 void calibrated_point (Context *ctx) {
 	if (ctx->last.x - ctx->point.x < Calib(ctx)->threshold.x
 		&& ctx->last.y - ctx->point.y < Calib(ctx)->threshold.y)
@@ -23,8 +14,6 @@ void calibrated_point (Context *ctx) {
 
 	float	x = get_x(ctx);
 	float	y = get_y(ctx);
-
-	Dump_touch(x,y,get_time());
 
 	on_point (ctx->screen, (Point){
 		.x = x * ctx->screen.width,
