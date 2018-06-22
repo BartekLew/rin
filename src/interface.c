@@ -33,7 +33,8 @@ uint record_start = 0;
 void on_point (Screen s, Point p) {
 	if (record_file != NULL) {
 		SerializedPoint pos = { .x = p.x, .y = p.y,
-			.time = get_time() - record_start, .color = brush_color,
+			.time = get_time() - record_start,
+			.color = serialize_color(brush_color),
 			.size = brush_size
 		};
 		fwrite (&pos, sizeof(pos), 1, record_file);
@@ -210,7 +211,7 @@ void replay_act (Screen *s, char *arg, Color mask) {
 		while (fread (&p, sizeof(p), 1, record) == 1) {
 			while (p.time + start_time > get_time());
 			brush_size = p.size;
-			brush_color = p.color;
+			brush_color = restore_color(p.color);
 			on_point (*s, (Point){
 				.x = p.x,
 				.y = p.y

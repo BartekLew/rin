@@ -18,6 +18,9 @@
 #define UNUSED(var) (void)(var)
 
 #define _u (unsigned int)
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
 
 #ifdef TESTIFY
 
