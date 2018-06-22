@@ -51,19 +51,22 @@ void close_record(void) {
 	}
 }
 
+struct timespec timer_base = {0};
 uint get_time (void) {
-	static struct timespec base = {0};
-
 	struct timespec t;
 	clock_gettime (CLOCK_REALTIME, &t);
 
-	if (base.tv_sec == 0 && base.tv_nsec == 0) {
-		base = t;
+	if (timer_base.tv_sec == 0 && timer_base.tv_nsec == 0) {
+		timer_base = t;
 		return 0;
 	} else {
-		return (t.tv_sec - base.tv_sec) * 100
-			+ (t.tv_nsec - base.tv_nsec) / 10000000;
+		return (t.tv_sec - timer_base.tv_sec) * 100
+			+ (t.tv_nsec - timer_base.tv_nsec) / 10000000;
 	}
+}
+
+void reset_timer (void) {
+	timer_base = (struct timespec){0};
 }
 
 pthread_t console;
@@ -189,6 +192,7 @@ void record_act (Screen *s, char *arg, Color mask) {
 		char file[File_max];
 		sscanf (arg, "%s", file);
 		record_file = fopen (file, "w");
+		reset_timer();
 		record_start = get_time();
 	}	
 }
@@ -203,13 +207,13 @@ void replay_act (Screen *s, char *arg, Color mask) {
 		if (record == NULL)
 			return;
 		SerializedPoint p;
-		uint start_time = get_time();
 
 		Color c = brush_color;
 		uint os = brush_size;
+		reset_timer();
 
 		while (fread (&p, sizeof(p), 1, record) == 1) {
-			while (p.time + start_time > get_time());
+			while (p.time > get_time());
 			brush_size = p.size;
 			brush_color = restore_color(p.color);
 			on_point (*s, (Point){
