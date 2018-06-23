@@ -21,6 +21,9 @@
 typedef uint8_t u8;
 typedef uint16_t u16;
 typedef uint32_t u32;
+typedef int8_t s8;
+typedef int16_t s16;
+typedef int32_t s32;
 
 #ifdef TESTIFY
 
@@ -76,4 +79,5 @@ typedef struct {
 
 typedef struct context Context;
 
+#define read_one(Var, Stream) fread (&Var, sizeof (Var), 1, Stream)
 #endif
