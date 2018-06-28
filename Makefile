@@ -12,14 +12,13 @@ ifeq ($(TYPE), DEBUG)
 endif
 
 
-all: head bin/rin bin/recall util/vectors
+all: head bin/rin bin/recall bin/vectors
 
 rebuild: clean all
 
 head:
 	@mkdir -p bin/
 	@mkdir -p o/
-	@mkdir -p util/
 
 	@echo "TYPE	= ${TYPE}"
 	@echo "CC	= ${CC}"
@@ -37,7 +36,7 @@ bin/recall: src/recall.c o/interface.o fblib/lib/fblib.a
 	@echo "	LNK	$@"
 	@${CC} ${CFLAGS} ${INCLUDE} $^ -D${TYPE} ${OPTS} -o $@ ${LIBS}
 
-util/%: src/%.c
+bin/vectors: src/vectors.c o/events.o o/calibration.o
 	@echo "	LNK	$@"
 	@${CC} ${CFLAGS} ${INCLUDE} $^ -D${TYPE} ${OPTS} -o $@ ${LIBS}
 
@@ -52,6 +51,6 @@ o/%.o: src/%.c
 	@false
 
 clean:
-	rm util/* bin/* o/* || true
+	rm bin/* o/* || true
 
 .PHONY: all head clean tail

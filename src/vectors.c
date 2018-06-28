@@ -1,4 +1,4 @@
-#include "interface.h"
+#include "events.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -68,27 +68,47 @@ bool same_direction (Vector a, Vector b) {
 	}
 }
 
-int main (int argc, char **argv) {
-	if (argc != 2)
-		return 1;
+Vector last_pt, new_pt;
 
-	FILE *input = fopen (argv[1], "r");
-	if (input == NULL)
-		Die ("cannot open file (%s) for reading", argv[1]);
+static void first_point (Context *ctx);
+static void second_point (Context *ctx);
+static void next_point (Context *ctx);
 
-	total_vector = (Vector){0};
-	SerializedPoint last_pt, new_pt;
+static void first_point (Context *ctx) {
+	last_pt = (Vector) { .x = ctx->point.x, .y = ctx->point.y };
+	points_cnt = 0;
+	ctx->point_handler = &second_point;
+}
 
-	read_one (last_pt, input);
-	while (read_one (new_pt, input) == 1) {
+static void second_point (Context *ctx) {
+	new_pt = (Vector) { .x = ctx->point.x, .y = ctx->point.y };
+
+	total_vector = (Vector){
+		.x = new_pt.x - last_pt.x,
+		.y = new_pt.y - last_pt.y
+	};
+
+	last_pt = new_pt;
+	ctx->point_handler = &next_point;
+}
+
+static void next_point (Context *ctx) {
+	if (ctx->pressure > 0) {
+		if (ctx->last.x - ctx->point.x < Calib(ctx)->threshold.x
+				&& ctx->last.y - ctx->point.y < Calib(ctx)->threshold.y)
+
+			return;
+
+		new_pt = (Vector) { .x = ctx->point.x, .y = ctx->point.y };
 		Vector v = {
 			.x = new_pt.x - last_pt.x,
 			.y = new_pt.y - last_pt.y
 		};
 		
-		Testify ("%d %d  ", v.x, v.y);
+		Testify ("%d %d  ", ctx->point.x, ctx->point.y);
 
 		if (!same_direction(v, total_vector)) {
+			printf ("** %d %d - %d %d\n", v.x, v.y, total_vector.x, total_vector.y);
 			add_point(total_vector);
 			total_vector = v;
 		} else {
@@ -97,21 +117,32 @@ int main (int argc, char **argv) {
 		}
 
 		last_pt = new_pt;
-	}
+		ctx->last = ctx->point;
+	} else {
+		add_point(total_vector);
 
-	add_point(total_vector);
-
-	for (size_t i = 0; i <= points_cnt; i++) {
-		s32 new_x = 0, new_y = 0;
-		for (size_t j = 0; j <= points_cnt; j++) {
-			if (i!=j) {
-				if (points[i].x - points[j].x > 20) new_x++;
-				if (points[i].y - points[j].y > 20) new_y++;
+		for (size_t i = 0; i <= points_cnt; i++) {
+			s32 new_x = 0, new_y = 0;
+			for (size_t j = 0; j <= points_cnt; j++) {
+				if (i!=j) {
+					if (points[i].x - points[j].x > 20) new_x++;
+					if (points[i].y - points[j].y > 20) new_y++;
+				}
 			}
+			printf ("%d %d\n", new_x, new_y);
 		}
-		printf ("%d %d\n", new_x, new_y);
+		ctx->point_handler = &first_point;
 	}
+}
 
-	fclose(input);	
+int main (int args_count, char **args) {
+	if (args_count != 2)
+		return 1;
+
+	if (!event_app (args[1], (Application) {
+		.point = &first_point
+	}))
+		return 2;
+
 	return 0;
 }
