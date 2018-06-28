@@ -5,7 +5,7 @@
 
 void event_loop (const int fd, Context *ctx);
 
-bool first_time = true;
+static bool first_time = true;
 
 typedef struct {
 	const char	*label;
@@ -14,7 +14,7 @@ typedef struct {
 
 
 #define Tests_Cnt 6
-Test tests[Tests_Cnt] = {
+static Test tests[Tests_Cnt] = {
 	{.label = "Up-Left"},
 	{.label = "Up-Right"},
 	{.label = "Down-Left"},
@@ -22,30 +22,30 @@ Test tests[Tests_Cnt] = {
 	{.label = "Tap center"},
 	{.label = "Tap center again"}
 };
-uint test_no = 0;
+static uint test_no = 0;
 
-void testify_square (const char *label, Point *min, Point *max) {
+static void testify_square (const char *label, Point *min, Point *max) {
 	Testify ("%20s: x = <%u;%u>\ty = <%u;%u>\t%ux%u\n",
 		label, _u min->x, _u max->x, _u min->y, _u max->y,
 		_u max->x - _u min->x, _u max->y - _u min->y
 	);
 }
 
-Point square_size (Point min, Point max) {
+static Point square_size (Point min, Point max) {
 	return (Point) {
 		.x = max.x - min.x,
 		.y = max.y - min.y
 	};
 }
 
-Point point_max (Point a, Point b) {
+static Point point_max (Point a, Point b) {
 	return (Point) {
 		.x = (a.x > b.x)? a.x : b.x,
 		.y = (a.y > b.y)? a.y : b.y
 	};
 }
 
-void update_minmax(Point *min, Point *max, Point current) {
+static void update_minmax(Point *min, Point *max, Point current) {
 	if (first_time) {
 		min->x = max->x = current.x;
 		min->y = max->y = current.y;
