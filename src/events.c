@@ -1,6 +1,4 @@
 #include "events.h"
-#include "calibration.h"
-
 
 typedef void (*EventHandler) (Event *in, Context *ctx);
 
@@ -19,8 +17,7 @@ EventHandler handlers[] = {
 void event_loop (const int fd, Context *ctx) {
 	Event	e;
 
-	while ( ctx->point_handler != NULL
-		&& read (fd, &e, sizeof(e)) == sizeof(e)) {
+	while (read (fd, &e, sizeof(e)) == sizeof(e)) {
 
 		if (e.type < Handlers_Cnt && handlers[e.type] != NULL)
 			handlers[e.type](&e, ctx);
@@ -34,9 +31,8 @@ bool event_app (const char *dev, Application app) {
 		return false;
 
 	Context ctx = {
-		.calibration = get_calibration(fd),
-		.point_handler = app.point,
-		.screen = app.screen
+		.app = app,
+		.touching = false
 	};
 
 	Testify ("CTX: min=%ux%u max=%ux%u treshold=%ux%u\n",
@@ -53,9 +49,6 @@ bool event_app (const char *dev, Application app) {
 
 	if (app.conclusion != NULL)
 		app.conclusion (&ctx);
-
-	munmap (ctx.calibration.data, sizeof(Context));
-	close (ctx.calibration.fd);
 
 	close(fd);
 	return true;
@@ -87,9 +80,22 @@ static void ignore (Event *ev, Context *ctx) {
 }
 
 static void sync_action (Event *in, Context *ctx) {
-
 	if (ctx->completeness & CTX_TOUCH) {
-		ctx->point_handler(ctx);
+		if (ctx->pressure > 0) {
+			if (!ctx->touching) {
+				ctx->touching = true;
+				if (ctx->app.touch)
+					ctx->app.touch(ctx);
+			} else {
+				if (ctx->app.move)
+					ctx->app.move(ctx);
+			}
+			ctx->last = ctx->point;
+		} else {
+			ctx->touching = false;
+			if (ctx->app.release)
+				ctx->app.release(ctx);
+		}
 	}
 
 	fflush(stdout);

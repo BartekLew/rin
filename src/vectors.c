@@ -68,71 +68,51 @@ bool same_direction (Vector a, Vector b) {
 	}
 }
 
-Vector last_pt, new_pt;
+static void first_move (Context *ctx);
+static void next_move (Context *ctx);
+static void release (Context *ctx);
 
-static void first_point (Context *ctx);
-static void second_point (Context *ctx);
-static void next_point (Context *ctx);
-
-static void first_point (Context *ctx) {
-	last_pt = (Vector) { .x = ctx->point.x, .y = ctx->point.y };
-	points_cnt = 0;
-	ctx->point_handler = &second_point;
-}
-
-static void second_point (Context *ctx) {
-	new_pt = (Vector) { .x = ctx->point.x, .y = ctx->point.y };
-
+static void first_move (Context *ctx) {
 	total_vector = (Vector){
-		.x = new_pt.x - last_pt.x,
-		.y = new_pt.y - last_pt.y
+		.x = ctx->point.x - ctx->last.x,
+		.y = ctx->point.y - ctx->last.y
 	};
 
-	last_pt = new_pt;
-	ctx->point_handler = &next_point;
+	ctx->app.move = &next_move;
 }
 
-static void next_point (Context *ctx) {
-	if (ctx->pressure > 0) {
-		if (ctx->last.x - ctx->point.x < Calib(ctx)->threshold.x
-				&& ctx->last.y - ctx->point.y < Calib(ctx)->threshold.y)
+static void next_move (Context *ctx) {
+	Vector v = {
+		.x = ctx->point.x - ctx->last.x,
+		.y = ctx->point.y - ctx->last.y
+	};
 
-			return;
+	Testify ("%d %d  ", ctx->point.x, ctx->point.y);
 
-		new_pt = (Vector) { .x = ctx->point.x, .y = ctx->point.y };
-		Vector v = {
-			.x = new_pt.x - last_pt.x,
-			.y = new_pt.y - last_pt.y
-		};
-		
-		Testify ("%d %d  ", ctx->point.x, ctx->point.y);
-
-		if (!same_direction(v, total_vector)) {
-			printf ("** %d %d - %d %d\n", v.x, v.y, total_vector.x, total_vector.y);
-			add_point(total_vector);
-			total_vector = v;
-		} else {
-			total_vector.x += v.x;
-			total_vector.y += v.y;
-		}
-
-		last_pt = new_pt;
-		ctx->last = ctx->point;
-	} else {
+	if (!same_direction(v, total_vector)) {
+		printf ("** %d %d - %d %d\n", v.x, v.y, total_vector.x, total_vector.y);
 		add_point(total_vector);
-
-		for (size_t i = 0; i <= points_cnt; i++) {
-			s32 new_x = 0, new_y = 0;
-			for (size_t j = 0; j <= points_cnt; j++) {
-				if (i!=j) {
-					if (points[i].x - points[j].x > 20) new_x++;
-					if (points[i].y - points[j].y > 20) new_y++;
-				}
-			}
-			printf ("%d %d\n", new_x, new_y);
-		}
-		ctx->point_handler = &first_point;
+		total_vector = v;
+	} else {
+		total_vector.x += v.x;
+		total_vector.y += v.y;
 	}
+}
+
+void release (Context *ctx) {
+	add_point(total_vector);
+
+	for (size_t i = 0; i <= points_cnt; i++) {
+		s32 new_x = 0, new_y = 0;
+		for (size_t j = 0; j <= points_cnt; j++) {
+			if (i!=j) {
+				if (points[i].x - points[j].x > 20) new_x++;
+				if (points[i].y - points[j].y > 20) new_y++;
+			}
+		}
+		printf ("%d %d\n", new_x, new_y);
+	}
+	ctx->app.move = &first_move;
 }
 
 int main (int args_count, char **args) {
@@ -140,7 +120,8 @@ int main (int args_count, char **args) {
 		return 1;
 
 	if (!event_app (args[1], (Application) {
-		.point = &first_point
+		.move = &first_move,
+		.release = &release
 	}))
 		return 2;
 

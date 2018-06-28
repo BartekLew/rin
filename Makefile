@@ -12,7 +12,7 @@ ifeq ($(TYPE), DEBUG)
 endif
 
 
-all: head bin/rin bin/recall bin/vectors
+all: head bin/vectors
 
 rebuild: clean all
 
@@ -28,15 +28,7 @@ head:
 	@echo "OPTS	= ${OPTS}"
 	@echo
 
-bin/rin: src/rin.c o/events.o o/calibration.o o/interface.o fblib/lib/fblib.a
-	@echo "	LNK	$@"
-	@${CC} ${CFLAGS} ${INCLUDE} $^ -D${TYPE} ${OPTS} -o $@ ${LIBS}
-
-bin/recall: src/recall.c o/interface.o fblib/lib/fblib.a
-	@echo "	LNK	$@"
-	@${CC} ${CFLAGS} ${INCLUDE} $^ -D${TYPE} ${OPTS} -o $@ ${LIBS}
-
-bin/vectors: src/vectors.c o/events.o o/calibration.o
+bin/vectors: src/vectors.c o/events.o
 	@echo "	LNK	$@"
 	@${CC} ${CFLAGS} ${INCLUDE} $^ -D${TYPE} ${OPTS} -o $@ ${LIBS}
 
