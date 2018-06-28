@@ -68,15 +68,25 @@ bool same_direction (Vector a, Vector b) {
 	}
 }
 
+static void touch (Context *ctx);
 static void first_move (Context *ctx);
 static void next_move (Context *ctx);
 static void release (Context *ctx);
+
+uint events;
+Vector avg_ev;
+
+static void touch (Context *ctx) {
+	events = 2;	
+}
 
 static void first_move (Context *ctx) {
 	total_vector = (Vector){
 		.x = ctx->point.x - ctx->last.x,
 		.y = ctx->point.y - ctx->last.y
 	};
+	avg_ev.x = abs(total_vector.x);
+	avg_ev.y = abs(total_vector.y);
 
 	ctx->app.move = &next_move;
 }
@@ -87,8 +97,6 @@ static void next_move (Context *ctx) {
 		.y = ctx->point.y - ctx->last.y
 	};
 
-	Testify ("%d %d  ", ctx->point.x, ctx->point.y);
-
 	if (!same_direction(v, total_vector)) {
 		printf ("** %d %d - %d %d\n", v.x, v.y, total_vector.x, total_vector.y);
 		add_point(total_vector);
@@ -97,10 +105,18 @@ static void next_move (Context *ctx) {
 		total_vector.x += v.x;
 		total_vector.y += v.y;
 	}
+
+	avg_ev.x = (events*avg_ev.x + abs(v.x)) / (events+1);
+	avg_ev.y = (events*avg_ev.y + abs(v.y)) / (events+1);
+	events++;
 }
 
 void release (Context *ctx) {
 	add_point(total_vector);
+	events++;
+
+	printf("%u events\n", _u events);
+	printf("average move: %u %u\n", avg_ev.x, avg_ev.y);
 
 	for (size_t i = 0; i <= points_cnt; i++) {
 		s32 new_x = 0, new_y = 0;
@@ -120,6 +136,7 @@ int main (int args_count, char **args) {
 		return 1;
 
 	if (!event_app (args[1], (Application) {
+		.touch = &touch,
 		.move = &first_move,
 		.release = &release
 	}))
