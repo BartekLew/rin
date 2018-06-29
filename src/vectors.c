@@ -17,7 +17,8 @@ typedef struct {
 } Shape;
 Shape current;
 
-#define letters_cnt 'e' - 'a'
+#define Letters_file ".letters.dat"
+#define letters_cnt 'z' - 'a' + 1
 Shape	letters[letters_cnt];
 uint	current_letter = 0;
 
@@ -82,7 +83,10 @@ static void next_move (Context *ctx);
 static void release (Context *ctx);
 
 static void init (Context *ctx) {
-	printf ("draw letter \"a\"...\n");
+	if (letters_cnt > current_letter)
+		printf ("draw letter \"a\"...\n");
+	else
+		printf ("draw letter to recognize...\n");
 }
 
 static void first_move (Context *ctx) {
@@ -110,7 +114,7 @@ static void next_move (Context *ctx) {
 	}
 }
 
-void release (Context *ctx) {
+static void release (Context *ctx) {
 	add_point(total_vector);
 
 	uint grades[letters_cnt] = {0};
@@ -139,6 +143,7 @@ void release (Context *ctx) {
 	if (current_letter >= letters_cnt) {
 		uint guess = 0;
 		for (uint i = 0; i < letters_cnt; i++) {
+			grades[i] *= abs(letters[i].points_cnt - current.points_cnt) +1;
 			if (grades[i] < grades[guess]) guess = i;
 
 			printf ("%c: %u, points %u/%u\n", (int)('a'+i), _u grades[i],
@@ -148,6 +153,17 @@ void release (Context *ctx) {
 	}
 
 	current_letter++;
+	if (current_letter == letters_cnt) {
+		FILE *letters_file = fopen (Letters_file, "w");
+		if (letters_file != NULL && fwrite (
+				letters, sizeof(Shape), letters_cnt, letters_file
+			) == letters_cnt)
+			fclose (letters_file);
+		else
+			Warn ("Unable to write %u bytes to %s\n",
+				_u sizeof(Shape)*letters_cnt, Letters_file
+			);
+	}
 	if (current_letter < letters_cnt)
 		printf ("draw letter \"%c\"...\n", (int)('a' + current_letter));
 	else
@@ -159,6 +175,14 @@ void release (Context *ctx) {
 int main (int args_count, char **args) {
 	if (args_count != 2)
 		return 1;
+
+	FILE *letters_file = fopen (Letters_file, "r");
+	if (letters_file != NULL && fread(
+			letters, sizeof(Shape), letters_cnt, letters_file
+		) == letters_cnt) {
+		current_letter = letters_cnt;
+		fclose (letters_file);
+	}
 
 	if (!event_app (args[1], (Application) {
 		.init = &init,
