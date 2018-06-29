@@ -10,19 +10,27 @@ typedef struct {
 Vector total_vector;
 
 #define Max_points 30
-Vector	points[Max_points] = {0};
-size_t	points_cnt = 0;
+
+typedef struct {
+	Vector	points[Max_points];
+	size_t	points_cnt;
+} Shape;
+Shape current;
+
+#define letters_cnt 'e' - 'a'
+Shape	letters[letters_cnt];
+uint	current_letter = 0;
 
 void add_point (Vector v) {
 	if (abs(v.x) < 15 || abs(v.y) < 15)
 		return;
 
-	if (++points_cnt >= Max_points)
+	if (++current.points_cnt >= Max_points)
 		Die ("too many points!");
 
-	points[points_cnt] = (Vector) {
-		.x = points[points_cnt-1].x + v.x,
-		.y = points[points_cnt-1].y + v.y
+	current.points[current.points_cnt] = (Vector) {
+		.x = current.points[current.points_cnt-1].x + v.x,
+		.y = current.points[current.points_cnt-1].y + v.y
 	};
 }
 
@@ -68,16 +76,13 @@ bool same_direction (Vector a, Vector b) {
 	}
 }
 
-static void touch (Context *ctx);
+static void init (Context *ctx);
 static void first_move (Context *ctx);
 static void next_move (Context *ctx);
 static void release (Context *ctx);
 
-uint events;
-Vector avg_ev;
-
-static void touch (Context *ctx) {
-	events = 2;	
+static void init (Context *ctx) {
+	printf ("draw letter \"a\"...\n");
 }
 
 static void first_move (Context *ctx) {
@@ -85,8 +90,7 @@ static void first_move (Context *ctx) {
 		.x = ctx->point.x - ctx->last.x,
 		.y = ctx->point.y - ctx->last.y
 	};
-	avg_ev.x = abs(total_vector.x);
-	avg_ev.y = abs(total_vector.y);
+	current.points_cnt = 0;
 
 	ctx->app.move = &next_move;
 }
@@ -98,36 +102,57 @@ static void next_move (Context *ctx) {
 	};
 
 	if (!same_direction(v, total_vector)) {
-		printf ("** %d %d - %d %d\n", v.x, v.y, total_vector.x, total_vector.y);
 		add_point(total_vector);
 		total_vector = v;
 	} else {
 		total_vector.x += v.x;
 		total_vector.y += v.y;
 	}
-
-	avg_ev.x = (events*avg_ev.x + abs(v.x)) / (events+1);
-	avg_ev.y = (events*avg_ev.y + abs(v.y)) / (events+1);
-	events++;
 }
 
 void release (Context *ctx) {
 	add_point(total_vector);
-	events++;
 
-	printf("%u events\n", _u events);
-	printf("average move: %u %u\n", avg_ev.x, avg_ev.y);
+	uint grades[letters_cnt] = {0};
+	if (current_letter < letters_cnt)
+		letters[current_letter].points_cnt = current.points_cnt;
 
-	for (size_t i = 0; i <= points_cnt; i++) {
+	for (size_t i = 0; i <= current.points_cnt; i++) {
 		s32 new_x = 0, new_y = 0;
-		for (size_t j = 0; j <= points_cnt; j++) {
+		for (size_t j = 0; j <= current.points_cnt; j++) {
 			if (i!=j) {
-				if (points[i].x - points[j].x > 20) new_x++;
-				if (points[i].y - points[j].y > 20) new_y++;
+				if (current.points[i].x - current.points[j].x > 20) new_x++;
+				if (current.points[i].y - current.points[j].y > 20) new_y++;
 			}
 		}
-		printf ("%d %d\n", new_x, new_y);
+
+		if (current_letter < letters_cnt)
+			letters[current_letter].points[i] = (Vector) {
+				.x = new_x, .y = new_y
+			};
+		else for (uint li = 0; li < letters_cnt; li++)
+			if (letters[li].points_cnt > i)
+				grades[li] += abs(letters[li].points[i].x - new_x)
+					+ abs(letters[li].points[i].y - new_y);
 	}
+
+	if (current_letter >= letters_cnt) {
+		uint guess = 0;
+		for (uint i = 0; i < letters_cnt; i++) {
+			if (grades[i] < grades[guess]) guess = i;
+
+			printf ("%c: %u, points %u/%u\n", (int)('a'+i), _u grades[i],
+				_u letters[i].points_cnt, _u current.points_cnt);
+		}
+		printf ("my guess is \"%c\".\n", (int)('a'+guess));
+	}
+
+	current_letter++;
+	if (current_letter < letters_cnt)
+		printf ("draw letter \"%c\"...\n", (int)('a' + current_letter));
+	else
+		printf ("draw letter to recognize...\n");
+
 	ctx->app.move = &first_move;
 }
 
@@ -136,7 +161,7 @@ int main (int args_count, char **args) {
 		return 1;
 
 	if (!event_app (args[1], (Application) {
-		.touch = &touch,
+		.init = &init,
 		.move = &first_move,
 		.release = &release
 	}))
