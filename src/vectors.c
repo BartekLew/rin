@@ -176,12 +176,10 @@ int main (int args_count, char **args) {
 	if (args_count != 2)
 		return 1;
 
-	FILE *letters_file = fopen (Letters_file, "r");
-	if (letters_file != NULL && fread(
-			letters, sizeof(Shape), letters_cnt, letters_file
-		) == letters_cnt) {
-		current_letter = letters_cnt;
-		fclose (letters_file);
+	optional_file (Letters_file, Read, lf) {
+		if (read_exact (letters, letters_cnt, lf))
+			current_letter = letters_cnt;
+		fclose(lf);
 	}
 
 	if (!event_app (args[1], (Application) {

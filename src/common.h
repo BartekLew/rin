@@ -79,5 +79,16 @@ typedef struct {
 
 typedef struct context Context;
 
-#define read_one(Var, Stream) fread (&Var, sizeof (Var), 1, Stream)
+#define Read "r"
+#define Write "w"
+#define optional_file(Name, Mode, Handle) \
+	FILE *Handle = fopen (Name, Mode); \
+	if (Handle != NULL)
+
+#define read_one(Var, Stream) \
+	fread (&Var, sizeof (Var), 1, Stream)
+
+#define read_exact(Arr, Count, Stream) \
+	fread (Arr, sizeof(*Arr), Count, Stream) == Count
+
 #endif
