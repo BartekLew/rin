@@ -115,22 +115,24 @@ static void next_move (Context *ctx) {
 	}
 }
 
+static Vector translate_point (uint id) {
+	s32 new_x = 0, new_y = 0;
+	for (size_t j = 0; j <= current.points_cnt; j++) {
+		if (id!=j) {
+			if (current.points[id].x - current.points[j].x > 20) new_x++;
+			if (current.points[id].y - current.points[j].y > 20) new_y++;
+		}
+	}
+
+	return (Vector) { .x = new_x, .y = new_y };
+}
+
 static void store_letter (Context *ctx) {
 	add_point(total_vector);
 	letters[current_letter].points_cnt = current.points_cnt;
 	
 	for (size_t i = 0; i <= current.points_cnt; i++) {
-		s32 new_x = 0, new_y = 0;
-		for (size_t j = 0; j <= current.points_cnt; j++) {
-			if (i!=j) {
-				if (current.points[i].x - current.points[j].x > 20) new_x++;
-				if (current.points[i].y - current.points[j].y > 20) new_y++;
-			}
-		}
-
-		letters[current_letter].points[i] = (Vector) {
-			.x = new_x, .y = new_y
-		};
+		letters[current_letter].points[i] = translate_point(i);
 	}
 
 	current_letter++;
@@ -160,18 +162,12 @@ static void recognize_letter (Context *ctx) {
 	uint grades[letters_cnt] = {0};
 	
 	for (size_t i = 0; i <= current.points_cnt; i++) {
-		s32 new_x = 0, new_y = 0;
-		for (size_t j = 0; j <= current.points_cnt; j++) {
-			if (i!=j) {
-				if (current.points[i].x - current.points[j].x > 20) new_x++;
-				if (current.points[i].y - current.points[j].y > 20) new_y++;
-			}
-		}
+		Vector new = translate_point(i);
 
 		for (uint li = 0; li < letters_cnt; li++)
 			if (letters[li].points_cnt > i)
-				grades[li] += abs(letters[li].points[i].x - new_x)
-					+ abs(letters[li].points[i].y - new_y);
+				grades[li] += abs(letters[li].points[i].x - new.x)
+					+ abs(letters[li].points[i].y - new.y);
 	}
 	
 	uint guess = 0;
