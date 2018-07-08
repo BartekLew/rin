@@ -80,7 +80,8 @@ bool same_direction (Vector a, Vector b) {
 static void init (Context *ctx);
 static void first_move (Context *ctx);
 static void next_move (Context *ctx);
-static void release (Context *ctx);
+static void store_letter (Context *ctx);
+static void recognize_letter (Context *ctx);
 
 static void init (Context *ctx) {
 	if (letters_cnt > current_letter)
@@ -114,13 +115,10 @@ static void next_move (Context *ctx) {
 	}
 }
 
-static void release (Context *ctx) {
+static void store_letter (Context *ctx) {
 	add_point(total_vector);
-
-	uint grades[letters_cnt] = {0};
-	if (current_letter < letters_cnt)
-		letters[current_letter].points_cnt = current.points_cnt;
-
+	letters[current_letter].points_cnt = current.points_cnt;
+	
 	for (size_t i = 0; i <= current.points_cnt; i++) {
 		s32 new_x = 0, new_y = 0;
 		for (size_t j = 0; j <= current.points_cnt; j++) {
@@ -130,44 +128,62 @@ static void release (Context *ctx) {
 			}
 		}
 
-		if (current_letter < letters_cnt)
-			letters[current_letter].points[i] = (Vector) {
-				.x = new_x, .y = new_y
-			};
-		else for (uint li = 0; li < letters_cnt; li++)
+		letters[current_letter].points[i] = (Vector) {
+			.x = new_x, .y = new_y
+		};
+	}
+
+	current_letter++;
+
+	if (current_letter == letters_cnt) {
+		bool success = false;
+		optional_file (Letters_file, Write, lf) {
+			if (write_exact (letters, letters_cnt, lf))
+				success = true;
+			fclose(lf);
+		}
+		if (!success)
+			Warn ("Unable to write %u bytes to %s\n",
+				_u sizeof(Shape)*letters_cnt, Letters_file
+			);
+		
+		printf ("draw letter to recognize...\n");
+		ctx->app.release = &recognize_letter;
+	} else
+		printf ("draw letter \"%c\"...\n", (int)('a' + current_letter));
+
+	ctx->app.move = &first_move;
+}
+
+static void recognize_letter (Context *ctx) {
+	add_point(total_vector);
+	uint grades[letters_cnt] = {0};
+	
+	for (size_t i = 0; i <= current.points_cnt; i++) {
+		s32 new_x = 0, new_y = 0;
+		for (size_t j = 0; j <= current.points_cnt; j++) {
+			if (i!=j) {
+				if (current.points[i].x - current.points[j].x > 20) new_x++;
+				if (current.points[i].y - current.points[j].y > 20) new_y++;
+			}
+		}
+
+		for (uint li = 0; li < letters_cnt; li++)
 			if (letters[li].points_cnt > i)
 				grades[li] += abs(letters[li].points[i].x - new_x)
 					+ abs(letters[li].points[i].y - new_y);
 	}
+	
+	uint guess = 0;
+	for (uint i = 0; i < letters_cnt; i++) {
+		grades[i] *= abs(letters[i].points_cnt - current.points_cnt) +1;
+		if (grades[i] < grades[guess]) guess = i;
 
-	if (current_letter >= letters_cnt) {
-		uint guess = 0;
-		for (uint i = 0; i < letters_cnt; i++) {
-			grades[i] *= abs(letters[i].points_cnt - current.points_cnt) +1;
-			if (grades[i] < grades[guess]) guess = i;
-
-			printf ("%c: %u, points %u/%u\n", (int)('a'+i), _u grades[i],
+		printf ("%c: %u, points %u/%u\n", (int)('a'+i), _u grades[i],
 				_u letters[i].points_cnt, _u current.points_cnt);
-		}
-		printf ("my guess is \"%c\".\n", (int)('a'+guess));
 	}
-
-	current_letter++;
-	if (current_letter == letters_cnt) {
-		FILE *letters_file = fopen (Letters_file, "w");
-		if (letters_file != NULL && fwrite (
-				letters, sizeof(Shape), letters_cnt, letters_file
-			) == letters_cnt)
-			fclose (letters_file);
-		else
-			Warn ("Unable to write %u bytes to %s\n",
-				_u sizeof(Shape)*letters_cnt, Letters_file
-			);
-	}
-	if (current_letter < letters_cnt)
-		printf ("draw letter \"%c\"...\n", (int)('a' + current_letter));
-	else
-		printf ("draw letter to recognize...\n");
+	printf ("my guess is \"%c\".\n", (int)('a'+guess));
+	printf ("draw letter to recognize...\n");
 
 	ctx->app.move = &first_move;
 }
@@ -176,16 +192,19 @@ int main (int args_count, char **args) {
 	if (args_count != 2)
 		return 1;
 
+	Handler release = &store_letter;
 	optional_file (Letters_file, Read, lf) {
-		if (read_exact (letters, letters_cnt, lf))
+		if (read_exact (letters, letters_cnt, lf)) {
 			current_letter = letters_cnt;
+			release = &recognize_letter;
+		}
 		fclose(lf);
 	}
 
 	if (!event_app (args[1], (Application) {
 		.init = &init,
 		.move = &first_move,
-		.release = &release
+		.release = release
 	}))
 		return 2;
 

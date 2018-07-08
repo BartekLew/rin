@@ -91,4 +91,7 @@ typedef struct context Context;
 #define read_exact(Arr, Count, Stream) \
 	fread (Arr, sizeof(*Arr), Count, Stream) == Count
 
+#define write_exact(Arr, Count, Stream) \
+	fwrite (Arr, sizeof(*Arr), Count, Stream) == Count
+
 #endif
