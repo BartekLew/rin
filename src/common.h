@@ -18,12 +18,14 @@
 #define UNUSED(var) (void)(var)
 
 #define _u (unsigned int)
+#define _s (int)
 typedef uint8_t u8;
 typedef uint16_t u16;
 typedef uint32_t u32;
 typedef int8_t s8;
 typedef int16_t s16;
 typedef int32_t s32;
+typedef int_fast32_t sint;
 
 #ifdef TESTIFY
 
@@ -71,11 +73,18 @@ typedef int32_t s32;
 	printf ("(W) in %s @ %u\n", __FILE__, __LINE__); \
 }
 
+#define loop(I,Len) \
+	for (uint I = 0; I < Len; I++)
+
 typedef struct input_event Event;
 
 typedef struct {
 	uint x, y;
 } Point;
+
+typedef struct {
+	sint x, y;
+} Mov;
 
 typedef struct context Context;
 
