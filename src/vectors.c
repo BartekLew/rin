@@ -1,8 +1,11 @@
 #include "events.h"
+#include "shape_db.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+
+#define Letter_db ".letters.dat"
 
 static Mov mov (Point a, Point b) {
 	return (Mov) {
@@ -44,7 +47,10 @@ static void scale_route (Point *pts, uint len) {
 			if (copy[i].x > copy[j].x) x++;
 			if (copy[i].y > copy[j].y) y++;
 		}
-		pts[i] = (Point){.x = x, .y = y};
+		pts[i] = (Point){
+			.x = 10 * x / len,
+			.y = 10 * y / len
+		};
 	}
 }
 
@@ -67,15 +73,35 @@ static void move (Context *ctx) {
 }
 
 static void release (Context *ctx) {
-	if (mov_len >0)
+	if (mov_len > 0)
 		route[route_len++] = ctx->point;
 
 	scale_route (route, route_len);
-	loop (i, route_len) {
+	loop(i, route_len)
 		printf ("%u %u\t", _u route[i].x, _u route[i].y);
-	}
-
 	printf("\n");
+
+	Shape *s = shape(route, route_len);
+	if (shape_preasent (*s)) {
+		printf ("That's %c\n", s->meaning);
+	} else {
+		printf ("I don't know that one, what's that?> ");
+		char c;
+		scanf ("%c", &c);
+		while (1) {
+			char c = fgetc(stdin);
+			if (c == '\n') break;
+			if (c == '!') {
+				store_shapes(Letter_db);
+				exit(1);
+			}
+		}
+		s->meaning = c;
+	}
+}
+
+static void load_db(Context *ctx) {
+	load_shapes(Letter_db);
 }
 
 int main (int args_count, char **args) {
@@ -83,6 +109,7 @@ int main (int args_count, char **args) {
 		return 1;
 
 	if (!event_app (args[1], (Application) {
+		.init = &load_db,
 		.touch = &touch,
 		.move = &move,
 		.release = &release

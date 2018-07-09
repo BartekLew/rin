@@ -97,10 +97,25 @@ typedef struct context Context;
 #define read_one(Var, Stream) \
 	fread (&Var, sizeof (Var), 1, Stream)
 
+#define write_one(Var, Stream) \
+	fwrite (&Var, sizeof (Var), 1, Stream)
+
+#define write_one_w(Var, Stream, Name) \
+	if (fwrite (&Var, sizeof (Var), 1, Stream) != 1) \
+		Die ("Write %u bytes to %s failed @ %u.\n", \
+			 _u sizeof(Var), Name, _u ftell(Stream) \
+		);
+
 #define read_exact(Arr, Count, Stream) \
-	fread (Arr, sizeof(*Arr), Count, Stream) == Count
+	(fread (Arr, sizeof(*Arr), Count, Stream) == Count)
 
 #define write_exact(Arr, Count, Stream) \
-	fwrite (Arr, sizeof(*Arr), Count, Stream) == Count
+	(fwrite (Arr, sizeof(*Arr), Count, Stream) == Count)
+
+#define write_exact_w(Arr, Count, Stream, Name) \
+	if (fwrite (Arr, sizeof(*Arr), Count, Stream) != Count) \
+		Die ("Write %u bytes to %s failed @ %u.\n", \
+			 _u (sizeof(*Arr)*Count), Name, _u ftell(Stream) \
+		);
 
 #endif

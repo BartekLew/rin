@@ -4,12 +4,14 @@
 #include "common.h"
 
 #include <linux/input.h>
+#include <signal.h>
 #include <fblib.h>
 
 typedef void (*Handler) (Context *ctx);
 
 typedef struct {
 	Handler		init, touch, move, release, conclusion;
+	void		(*sigint) (int);
 } Application;
 
 struct context {

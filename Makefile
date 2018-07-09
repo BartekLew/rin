@@ -28,7 +28,7 @@ head:
 	@echo "OPTS	= ${OPTS}"
 	@echo
 
-bin/vectors: src/vectors.c o/events.o
+bin/vectors: src/vectors.c o/events.o o/shape_db.o
 	@echo "	LNK	$@"
 	@${CC} ${CFLAGS} ${INCLUDE} $^ -D${TYPE} ${OPTS} -o $@ ${LIBS}
 
