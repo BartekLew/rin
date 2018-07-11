@@ -20,4 +20,7 @@ Shape *shape(Point *sh, uint len);
 void load_shapes(const char *file);
 void store_shapes(const char *file);
 
+typedef void (*LetterIteration) (SmallPoint*, uint);
+void iterate_letter (char letter, LetterIteration action);
+
 #endif /* SHAPE_DB_H */

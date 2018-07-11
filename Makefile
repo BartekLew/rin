@@ -12,7 +12,7 @@ ifeq ($(TYPE), DEBUG)
 endif
 
 
-all: head bin/vectors
+all: head bin/vectors bin/sdb
 
 rebuild: clean all
 
@@ -29,6 +29,10 @@ head:
 	@echo
 
 bin/vectors: src/vectors.c o/events.o o/shape_db.o
+	@echo "	LNK	$@"
+	@${CC} ${CFLAGS} ${INCLUDE} $^ -D${TYPE} ${OPTS} -o $@ ${LIBS}
+
+bin/sdb: src/sdb.c o/stat.o o/shape_db.o
 	@echo "	LNK	$@"
 	@${CC} ${CFLAGS} ${INCLUDE} $^ -D${TYPE} ${OPTS} -o $@ ${LIBS}
 

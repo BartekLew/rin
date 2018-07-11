@@ -15,6 +15,8 @@
 
 #include <fblib.h>
 
+#define Letter_db ".letters.dat"
+
 #define UNUSED(var) (void)(var)
 
 #define _u (unsigned int)

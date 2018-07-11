@@ -5,11 +5,11 @@ typedef struct {
 	uint points, shapes;
 } DbHeader;
 
-#define Max_points 0x1000
+#define Max_points 0x10000
 SmallPoint points[Max_points];
 uint points_cnt = 0;
 
-#define Max_shapes 0x100
+#define Max_shapes 0x1000
 Shape shapes[Max_points];
 uint shapes_cnt = 0;
 
@@ -82,5 +82,12 @@ void store_shapes (const char *file) {
 		printf ("Stored letter db, %u/%u %u bytes\n",
 			_u points_cnt, _u shapes_cnt, _u ftell(out)
 		);
+	}
+}
+
+void iterate_letter (char letter, LetterIteration action) {
+	loop (i, shapes_cnt) {
+		if (shapes[i].meaning == letter)
+			action (points + shapes[i].point_pos, shapes[i].len);
 	}
 }

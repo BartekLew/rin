@@ -5,8 +5,6 @@
 #include <stdlib.h>
 #include <math.h>
 
-#define Letter_db ".letters.dat"
-
 static Mov mov (Point a, Point b) {
 	return (Mov) {
 		.x = (sint)b.x - a.x,
