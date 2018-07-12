@@ -7,11 +7,11 @@ typedef struct {
 
 #define Max_points 0x10000
 SmallPoint points[Max_points];
-uint points_cnt = 0;
+uint applied_points = 0, points_cnt = 0;
 
 #define Max_shapes 0x1000
 Shape shapes[Max_points];
-uint shapes_cnt = 0;
+uint applied_shapes = 0, shapes_cnt = 0;
 
 static bool shape_match (Point *shape, uint len, Shape patt) {
 	if (len != patt.len)
@@ -29,7 +29,7 @@ static bool shape_match (Point *shape, uint len, Shape patt) {
 }
 
 Shape *shape(Point *sh, uint len) {
-	loop (i, shapes_cnt) {
+	loop (i, applied_shapes) {
 		if (shape_match (sh, len, shapes[i]))
 			return shapes+i;
 	}
@@ -54,8 +54,8 @@ void load_shapes (const char *file) {
 	optional_file (file, Read, in) {
 		DbHeader h;
 		read_one (h, in);
-		points_cnt = h.points;
-		shapes_cnt = h.shapes;
+		applied_points = points_cnt = h.points;
+		applied_shapes = shapes_cnt = h.shapes;
 
 		if (!read_exact(points, points_cnt, in)
 			|| !read_exact(shapes, shapes_cnt, in)) {
@@ -71,13 +71,13 @@ void load_shapes (const char *file) {
 void store_shapes (const char *file) {
 	optional_file (file, Write, out) {
 		DbHeader h = {
-			.shapes = shapes_cnt,
-			.points = points_cnt
+			.shapes = applied_shapes,
+			.points = applied_points
 		};
 		
 		write_one_w (h, out, file);
-		write_exact_w (points, points_cnt, out, file);
-		write_exact_w (shapes, shapes_cnt, out, file);
+		write_exact_w (points, applied_points, out, file);
+		write_exact_w (shapes, applied_shapes, out, file);
 
 		printf ("Stored letter db, %u/%u %u bytes\n",
 			_u points_cnt, _u shapes_cnt, _u ftell(out)
@@ -86,8 +86,18 @@ void store_shapes (const char *file) {
 }
 
 void iterate_letter (char letter, LetterIteration action) {
-	loop (i, shapes_cnt) {
+	loop (i, applied_shapes) {
 		if (shapes[i].meaning == letter)
 			action (points + shapes[i].point_pos, shapes[i].len);
 	}
+}
+
+void drop_changes(void) {
+	points_cnt = applied_points;
+	shapes_cnt = applied_shapes;
+}
+
+void apply_changes(void) {
+	applied_points = points_cnt;
+	applied_shapes = shapes_cnt;
 }

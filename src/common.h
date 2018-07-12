@@ -78,6 +78,9 @@ typedef int_fast32_t sint;
 #define loop(I,Len) \
 	for (uint I = 0; I < Len; I++)
 
+#define in(I, Arr) \
+	for (uint I = 0; I < sizeof(Arr)/sizeof(*Arr); I++)
+
 typedef struct input_event Event;
 
 typedef struct {

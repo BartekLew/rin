@@ -19,6 +19,8 @@ static inline bool shape_preasent (Shape s) {
 Shape *shape(Point *sh, uint len);
 void load_shapes(const char *file);
 void store_shapes(const char *file);
+void drop_changes(void);
+void apply_changes(void);
 
 typedef void (*LetterIteration) (SmallPoint*, uint);
 void iterate_letter (char letter, LetterIteration action);
