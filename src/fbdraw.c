@@ -1,6 +1,10 @@
+/* Enable framebuffer output code */
+#define USE_FB 1
+
 #include "events.h"
 #include "interface.h"
 #include "common.h"
+
 
 #include <fblib.h>
 #include <time.h>

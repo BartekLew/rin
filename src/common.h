@@ -13,7 +13,12 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 
+#include <stdint.h>
+typedef uint_fast16_t uint;
+
+#ifdef USE_FB
 #include <fblib.h>
+#endif
 
 #define UNUSED(var) (void)(var)
 

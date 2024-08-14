@@ -36,7 +36,9 @@ bool event_app (const char *dev, Application app) {
 	Context ctx = {
 		.calibration = get_calibration(fd),
 		.point_handler = app.point,
+#ifdef USE_FB
 		.screen = app.screen
+#endif
 	};
 
 	Testify ("CTX: min=%ux%u max=%ux%u treshold=%ux%u\n",

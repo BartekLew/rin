@@ -12,7 +12,7 @@ ifeq ($(TYPE), DEBUG)
 endif
 
 
-all: head bin/fbdraw bin/recall
+all: head bin/fbdraw bin/recall bin/rin
 
 rebuild: clean all
 
@@ -27,6 +27,10 @@ head:
 	@echo "LIBS	= ${LIBS}"
 	@echo "OPTS	= ${OPTS}"
 	@echo
+
+bin/rin: src/rin.c o/events.o o/calibration.o
+	@echo "	LNK	$@"
+	@${CC} ${CFLAGS} $^ -D${TYPE} ${OPTS} -o $@ ${LIBS}
 
 bin/fbdraw: src/fbdraw.c o/events.o o/calibration.o o/interface.o fblib/lib/fblib.a
 	@echo "	LNK	$@"

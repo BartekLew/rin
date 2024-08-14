@@ -5,7 +5,10 @@
 #include "calibration.h"
 
 #include <linux/input.h>
+
+#ifdef USE_FB
 #include <fblib.h>
+#endif
 
 typedef void (*Handler) (Context *ctx);
 
@@ -15,7 +18,10 @@ struct context {
 	Handler		point_handler;
 
 	Calibration	calibration;
+
+#ifdef USE_FB
 	Screen		screen;
+#endif
 };
 
 /* Completeness flags */
@@ -27,7 +33,9 @@ struct context {
 
 typedef struct {
 	Handler		init, point, conclusion;
+#ifdef USE_FB
 	Screen		screen;
+#endif
 } Application;
 
 
