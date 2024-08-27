@@ -30,8 +30,10 @@ void event_loop (const int fd, Context *ctx) {
 
 bool event_app (const char *dev, Application app) {
 	int fd = open (dev, O_RDONLY);
-	if (fd < 0)
+	if (fd < 0) {
+        fprintf(stderr, "Can't open for reading: %s\n", dev);
 		return false;
+    }
 
 	Context ctx = {
 		.calibration = get_calibration(fd),
@@ -89,11 +91,11 @@ static void ignore (Event *ev, Context *ctx) {
 }
 
 static void sync_action (Event *in, Context *ctx) {
-
-	if (ctx->completeness & CTX_TOUCH) {
+	if (ctx->completeness & CTX_TOUCH || ctx->pressure == 0) {
 		ctx->point_handler(ctx);
 	}
 
+    // TODO: why?
 	fflush(stdout);
 	ctx->completeness = 0;
 }

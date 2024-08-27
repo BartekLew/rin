@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <limits.h>
 
 #include <unistd.h>
 #include <sys/stat.h>

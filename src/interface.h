@@ -1,6 +1,9 @@
 #ifndef __H_INTERFACE
 #define __H_INTERFACE
 
+/* Enable framebuffer output code */
+#define USE_FB 1
+
 #include "common.h"
 
 typedef struct {

@@ -19,6 +19,10 @@ struct context {
 
 	Calibration	calibration;
 
+#ifdef CONTEXT_FIELDS
+    CONTEXT_FIELDS
+#endif
+
 #ifdef USE_FB
 	Screen		screen;
 #endif

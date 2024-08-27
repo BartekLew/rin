@@ -1,6 +1,6 @@
 CC=gcc -D_POSIX_C_SOURCE=199309L
 LIBS=-lrt -lm -lpthread
-CFLAGS=-Wall -pedantic -std=c99
+CFLAGS=-Wall -std=c99
 INCLUDE=-Ifblib/
 TYPE=RELEASE
 OPTS=
@@ -32,13 +32,17 @@ bin/rin: src/rin.c o/events.o o/calibration.o
 	@echo "	LNK	$@"
 	@${CC} ${CFLAGS} $^ -D${TYPE} ${OPTS} -o $@ ${LIBS}
 
-bin/fbdraw: src/fbdraw.c o/events.o o/calibration.o o/interface.o fblib/lib/fblib.a
+bin/fbdraw: src/fbdraw.c o/events-fb.o o/calibration.o o/interface.o fblib/lib/fblib.a
 	@echo "	LNK	$@"
 	@${CC} ${CFLAGS} ${INCLUDE} $^ -D${TYPE} ${OPTS} -o $@ ${LIBS}
 
 bin/recall: src/recall.c o/interface.o fblib/lib/fblib.a
 	@echo "	LNK	$@"
 	@${CC} ${CFLAGS} ${INCLUDE} $^ -D${TYPE} ${OPTS} -o $@ ${LIBS}
+
+o/events-fb.o: src/events.c
+	@echo "	CC	$@"
+	@${CC} ${CFLAGS} ${INCLUDE} -c $< -D${TYPE} -DUSE_FB ${OPTS} -o $@
 
 o/%.o: src/%.c
 	@echo "	CC	$@"
