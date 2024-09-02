@@ -24,6 +24,8 @@ typedef uint_fast16_t uint;
 #define UNUSED(var) (void)(var)
 
 #define _u (unsigned int)
+#define _d (double)
+#define _p(SRC) (Point) { .x = (SRC).x, .y = (SRC).y }
 
 #ifdef TESTIFY
 
